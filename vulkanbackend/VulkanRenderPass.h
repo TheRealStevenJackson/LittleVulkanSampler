@@ -7,6 +7,8 @@ public:
 	VulkanRenderPass(VulkanContext&, VkFormat, VkFormat);
 	~VulkanRenderPass();
 
+	VkRenderPass renderPass() const { return mRenderPass; }
+
 private:
 	void createRenderPass();
 

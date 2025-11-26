@@ -7,6 +7,7 @@ add_library(VulkanBackend STATIC
 	VulkanCommandPool.cpp
 	VulkanRenderPass.cpp
 	VulkanImage.cpp
+	VulkanFramebuffer.cpp
 )
 
 target_include_directories(VulkanBackend

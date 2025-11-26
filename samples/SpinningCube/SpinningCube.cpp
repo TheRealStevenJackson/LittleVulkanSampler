@@ -3,6 +3,7 @@
 #include <VulkanBackend/VulkanSwapchain.h>
 #include <VulkanBackend/VulkanRenderPass.h>
 #include <vulkanbackend/VulkanImage.h>
+#include <vulkanbackend/VulkanFramebuffer.h>
 //#include <VulkanBackend/Pipeline.h>
 //#include <VulkanBackend/DescriptorSet.h>
 //#include <VulkanBackend/Buffer.h>
@@ -62,14 +63,13 @@ int main() {
 
     std::vector<VulkanImage> depthImages;
     depthImages.reserve(swapchain.imageCount());
-    for (int i = 0; i < swapchain.imageCount(); i++) {
+    for (uint32_t i = 0; i < swapchain.imageCount(); i++) {
         depthImages.emplace_back(
             ctx,
             VK_FORMAT_D32_SFLOAT,
             swapchain.getExtent()
         );
     }
-    std::cout << "End of program." << std::endl;
 
     VulkanRenderPass renderPass(
         ctx,
@@ -77,12 +77,22 @@ int main() {
         depthImages[0].format()
     );
 
-//    // -----------------------------------------
-//    // 4. Framebuffers
-//    // -----------------------------------------
-//    std::vector<Framebuffer> framebuffers =
-//        Framebuffer::createForSwapchain(renderPass, swapchain, depthView);
-//
+    std::cout << "End of program." << std::endl;
+    // -----------------------------------------
+    // 4. Framebuffers
+    // -----------------------------------------
+    std::vector<VulkanFramebuffer> framebuffers;
+    framebuffers.reserve(swapchain.imageCount());
+    for (uint32_t i = 0; i < swapchain.imageCount(); i++) {
+        framebuffers.emplace_back(
+            ctx,
+            renderPass.renderPass(),
+            swapchain.getImageViews()[i],
+            depthImages[i].imageView(),
+            swapchain.getExtent()
+        );
+    }
+
 //    // -----------------------------------------
 //    // 5. Load shaders
 //    // -----------------------------------------

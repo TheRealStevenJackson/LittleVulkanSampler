@@ -45,9 +45,11 @@ void VulkanImage::createImage()
 	imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 	imageViewInfo.format = mFormat;
+	//TODO: Fix image view creation errors.
+	//imageViewInfo.subresourceRange =
 
 	auto& vma = mContext.vma();
 
-	mAllocatedImage = vma.createImage(imageInfo, VMA_MEMORY_USAGE_AUTO, nullptr);
+	mAllocatedImage = vma.createImage(imageInfo, VMA_MEMORY_USAGE_AUTO, &imageViewInfo);
 }
 

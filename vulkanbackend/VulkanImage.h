@@ -16,6 +16,7 @@ public:
 	~VulkanImage();
 
 	VkFormat format() const { return mFormat; }
+	VkImageView imageView() const { return mAllocatedImage.imageView; }
 
 private:
 	void createImage();
