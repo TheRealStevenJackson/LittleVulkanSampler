@@ -5,6 +5,7 @@
 #include <vulkanbackend/VulkanImage.h>
 #include <vulkanbackend/VulkanFramebuffer.h>
 #include <vulkanbackend/VulkanShaderModule.h>
+#include <vulkanbackend/VulkanDescriptorSetLayout.h>
 //#include <VulkanBackend/Pipeline.h>
 //#include <VulkanBackend/DescriptorSet.h>
 //#include <VulkanBackend/Buffer.h>
@@ -95,23 +96,27 @@ int main() {
         );
     }
 
-//    // -----------------------------------------
-//    // 5. Load shaders
-//    // -----------------------------------------
-    std::cout << "CWD: " << std::filesystem::current_path() << std::endl;
+    // -----------------------------------------
+    // 5. Load shaders
+    // -----------------------------------------
     VulkanShaderModule vert = VulkanShaderModule(ctx, "spv/spinning_cube.vert.spv");
     VulkanShaderModule frag = VulkanShaderModule(ctx, "spv/spinning_cube.frag.spv");
-//
-//    // -----------------------------------------
-//    // 6. Pipeline layout + descriptor set layout
-//    // -----------------------------------------
-//    DescriptorSetLayout descriptorLayout = ctx.createDescriptorSetLayout({
-//        {0, DescriptorType::UniformBuffer, ShaderStage::Vertex}
-//        });
-//
-//    PipelineLayout pipelineLayout =
-//        ctx.createPipelineLayout(&descriptorLayout);
-//
+
+    // -----------------------------------------
+    // 6. Pipeline layout + descriptor set layout
+    // -----------------------------------------
+    VulkanDescriptorSetLayout descriptorLayout = VulkanDescriptorSetLayout(
+        ctx,
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        VK_SHADER_STAGE_VERTEX_BIT
+    );
+    //DescriptorSetLayout descriptorLayout = ctx.createDescriptorSetLayout({
+    //    {0, DescriptorType::UniformBuffer, ShaderStage::Vertex}
+    //    });
+
+    //PipelineLayout pipelineLayout =
+    //    ctx.createPipelineLayout(&descriptorLayout);
+
 //    // -----------------------------------------
 //    // 7. Pipeline
 //    // -----------------------------------------

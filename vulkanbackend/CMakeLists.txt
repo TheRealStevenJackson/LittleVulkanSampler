@@ -8,7 +8,7 @@ add_library(VulkanBackend STATIC
 	VulkanRenderPass.cpp
 	VulkanImage.cpp
 	VulkanFramebuffer.cpp
-)
+ "VulkanDescriptorSetLayout.cpp" "VulkanDescriptorSetLayout.h")
 
 target_include_directories(VulkanBackend
 	PUBLIC
