@@ -4,6 +4,7 @@
 #include <VulkanBackend/VulkanRenderPass.h>
 #include <vulkanbackend/VulkanImage.h>
 #include <vulkanbackend/VulkanFramebuffer.h>
+#include <vulkanbackend/VulkanShaderModule.h>
 //#include <VulkanBackend/Pipeline.h>
 //#include <VulkanBackend/DescriptorSet.h>
 //#include <VulkanBackend/Buffer.h>
@@ -14,6 +15,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <filesystem>
 
 //struct Vertex {
 //    glm::vec3 pos;
@@ -96,8 +98,9 @@ int main() {
 //    // -----------------------------------------
 //    // 5. Load shaders
 //    // -----------------------------------------
-//    ShaderModule vert = ctx.loadShader("shaders/cube.vert.spv");
-//    ShaderModule frag = ctx.loadShader("shaders/cube.frag.spv");
+    std::cout << "CWD: " << std::filesystem::current_path() << std::endl;
+    VulkanShaderModule vert = VulkanShaderModule(ctx, "spv/spinning_cube.vert.spv");
+    VulkanShaderModule frag = VulkanShaderModule(ctx, "spv/spinning_cube.frag.spv");
 //
 //    // -----------------------------------------
 //    // 6. Pipeline layout + descriptor set layout

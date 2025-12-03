@@ -3,17 +3,22 @@
 
 #include <fstream>
 #include <stdexcept>
+#include <iostream>
 
 VulkanShaderModule::VulkanShaderModule(const VulkanContext& context, const std::string& filepath)
 	: context_(context) {
 	auto code = readFile(filepath);
 	module_ = createShaderModule(code);
+
+	std::cout << "Created shader module." << std::endl;
 }
 
 VulkanShaderModule::~VulkanShaderModule() {
 	if (module_ != VK_NULL_HANDLE) {
 		vkDestroyShaderModule(context_.device(), module_, nullptr);
 	}
+
+	std::cout << "Destroyed shader module." << std::endl;
 }
 
 std::vector<char> VulkanShaderModule::readFile(const std::string& filepath) {

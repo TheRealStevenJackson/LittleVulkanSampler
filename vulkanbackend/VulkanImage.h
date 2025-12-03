@@ -20,6 +20,7 @@ public:
 
 private:
 	void createImage();
+	VkImageAspectFlagBits getAspectFlags(VkFormat);
 
 	VulkanContext& mContext;
 	VkFormat mFormat;
