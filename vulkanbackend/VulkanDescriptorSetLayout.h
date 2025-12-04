@@ -8,6 +8,8 @@ public:
 	VulkanDescriptorSetLayout(VulkanContext&, VkDescriptorType, VkShaderStageFlagBits);
 	~VulkanDescriptorSetLayout();
 
+	VkDescriptorSetLayout descriptorsetLayout() const { return mDescriptorSetLayout; }
+
 private:
 	void createDescriptorSetLayout();
 

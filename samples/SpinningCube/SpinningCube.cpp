@@ -6,12 +6,7 @@
 #include <vulkanbackend/VulkanFramebuffer.h>
 #include <vulkanbackend/VulkanShaderModule.h>
 #include <vulkanbackend/VulkanDescriptorSetLayout.h>
-//#include <VulkanBackend/Pipeline.h>
-//#include <VulkanBackend/DescriptorSet.h>
-//#include <VulkanBackend/Buffer.h>
-//#include <VulkanBackend/Commands.h>
-//#include <VulkanBackend/Framebuffer.h>
-//#include <VulkanBackend/FrameManager.h>
+#include <vulkanbackend/VulkanPipelineLayout.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -110,10 +105,8 @@ int main() {
         VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         VK_SHADER_STAGE_VERTEX_BIT
     );
-    //DescriptorSetLayout descriptorLayout = ctx.createDescriptorSetLayout({
-    //    {0, DescriptorType::UniformBuffer, ShaderStage::Vertex}
-    //    });
 
+    VulkanPipelineLayout pipelineLayout = VulkanPipelineLayout(ctx, descriptorLayout);
     //PipelineLayout pipelineLayout =
     //    ctx.createPipelineLayout(&descriptorLayout);
 
