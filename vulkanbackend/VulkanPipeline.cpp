@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-VulkanPipeline::VulkanPipeline(VulkanContext& context, VulkanRenderPass renderPass,
-	VulkanPipelineLayout pipelineLayout, VulkanShaderModule vert, VulkanShaderModule frag,
+VulkanPipeline::VulkanPipeline(VulkanContext& context, VulkanRenderPass& renderPass,
+	VulkanPipelineLayout& pipelineLayout, VulkanShaderModule& vert, VulkanShaderModule& frag,
 	uint32_t stride, uint32_t offsetCount, std::vector<uint32_t> offsets)
 	:mContext(context),
 	mRenderPass(renderPass),
@@ -74,6 +74,11 @@ void VulkanPipeline::createPipeline()
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
+	VkPipelineViewportStateCreateInfo viewportState{};
+	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportState.viewportCount = 1;
+	viewportState.scissorCount = 1;
+
 	VkPipelineRasterizationStateCreateInfo rasterState{};
 	rasterState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rasterState.depthClampEnable = VK_FALSE;
@@ -82,6 +87,7 @@ void VulkanPipeline::createPipeline()
 	rasterState.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterState.depthBiasEnable = VK_FALSE;
+	rasterState.lineWidth = 1.0;
 
 	VkPipelineMultisampleStateCreateInfo multisampleState{};
 	multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -108,17 +114,30 @@ void VulkanPipeline::createPipeline()
 	colorBlendState.attachmentCount = 1;
 	colorBlendState.pAttachments = &blendAttachment;
 
+	std::vector<VkDynamicState> dynamicStates{
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR
+	};
+
+	VkPipelineDynamicStateCreateInfo dynamicState{};
+	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+	dynamicState.pDynamicStates = dynamicStates.data();
+
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipelineInfo.stageCount = shaderStages.size();
 	pipelineInfo.pStages = shaderStages.data();
 	pipelineInfo.pVertexInputState = &vertexInfo;
 	pipelineInfo.pInputAssemblyState = &inputAssembly;
+	pipelineInfo.pViewportState = &viewportState;
 	pipelineInfo.pRasterizationState = &rasterState;
 	pipelineInfo.pMultisampleState = &multisampleState;
 	pipelineInfo.pDepthStencilState = &depthStencilState;
+	pipelineInfo.pColorBlendState = &colorBlendState;
 	pipelineInfo.layout = mPipelineLayout.pipelineLayout();
 	pipelineInfo.renderPass = mRenderPass.renderPass();
+	pipelineInfo.pDynamicState = &dynamicState;
 
 	if (vkCreateGraphicsPipelines(mContext.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &mPipeline) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create graphics pipeline.");

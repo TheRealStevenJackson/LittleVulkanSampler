@@ -7,18 +7,18 @@
 
 class VulkanPipeline {
 public:
-	VulkanPipeline(VulkanContext&, VulkanRenderPass, VulkanPipelineLayout,
-		VulkanShaderModule, VulkanShaderModule, uint32_t, uint32_t, std::vector<uint32_t>);
+	VulkanPipeline(VulkanContext&, VulkanRenderPass&, VulkanPipelineLayout&,
+		VulkanShaderModule&, VulkanShaderModule&, uint32_t, uint32_t, std::vector<uint32_t>);
 	~VulkanPipeline();
 
 private:
 	void createPipeline();
 
 	VulkanContext& mContext;
-	VulkanRenderPass mRenderPass;
-	VulkanPipelineLayout mPipelineLayout;
-	VulkanShaderModule mVert;
-	VulkanShaderModule mFrag;
+	VulkanRenderPass& mRenderPass;
+	VulkanPipelineLayout& mPipelineLayout;
+	VulkanShaderModule& mVert;
+	VulkanShaderModule& mFrag;
 	uint32_t mStride;
 	uint32_t mOffsetCount;
 	std::vector<uint32_t> mOffsets;
