@@ -7,16 +7,17 @@
 #include <vulkanbackend/VulkanShaderModule.h>
 #include <vulkanbackend/VulkanDescriptorSetLayout.h>
 #include <vulkanbackend/VulkanPipelineLayout.h>
+#include <vulkanbackend/VulkanPipeline.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <filesystem>
 
-//struct Vertex {
-//    glm::vec3 pos;
-//    glm::vec3 color;
-//};
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec3 color;
+};
 //
 //static const Vertex cubeVertices[] = {
 //    {{-1, -1, -1}, {1,0,0}},
@@ -107,12 +108,21 @@ int main() {
     );
 
     VulkanPipelineLayout pipelineLayout = VulkanPipelineLayout(ctx, descriptorLayout);
-    //PipelineLayout pipelineLayout =
-    //    ctx.createPipelineLayout(&descriptorLayout);
 
-//    // -----------------------------------------
-//    // 7. Pipeline
-//    // -----------------------------------------
+    // -----------------------------------------
+    // 7. Pipeline
+    // -----------------------------------------
+    VulkanPipeline pipeline = VulkanPipeline(
+        ctx,
+        renderPass,
+        pipelineLayout,
+        vert,
+        frag,
+        sizeof(Vertex),
+        2,
+        { {offsetof(Vertex, pos)},
+        offsetof(Vertex, color) }
+    );
 //    Pipeline pipeline = PipelineBuilder()
 //        .setRenderPass(renderPass)
 //        .setPipelineLayout(pipelineLayout)

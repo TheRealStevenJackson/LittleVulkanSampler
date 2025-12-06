@@ -9,6 +9,8 @@ public:
 	VulkanPipelineLayout(VulkanContext&, VulkanDescriptorSetLayout&);
 	~VulkanPipelineLayout();
 
+	VkPipelineLayout pipelineLayout() const { return mPipelineLayout; }
+
 private:
 	void createPipelineLayout();
 
