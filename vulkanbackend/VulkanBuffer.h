@@ -1,41 +1,34 @@
 #pragma once
 
+#include "vulkanbackend/VulkanContext.h"
+#include "vulkanbackend/VulkanMemory.h"
+
 #include <vulkan/vulkan.h>
 #include <cstdint>
 #include <cstring>
 
-class VulkanContext;
-
 class VulkanBuffer {
 public:
-	VulkanBuffer(
-		const VulkanContext& context,
-		VkDeviceSize size,
-		VkBufferUsageFlags usage,
-		VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+	VulkanBuffer(VulkanContext& context, VkDeviceSize size,
+		VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO,
+		VkMemoryPropertyFlags requiredFlags = 0
 	);
 
-	VulkanBuffer(
-		const VulkanContext& context,
-		const void* data,
-		VkDeviceSize size,
-		VkBufferUsageFlags usage
+	VulkanBuffer(VulkanContext& context, const void* data, VkDeviceSize size,
+		VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+		VkMemoryPropertyFlags requiredFlags = 0, VmaAllocationCreateFlags allocFlags = 0
 	);
 
 	~VulkanBuffer();
 
-	VkBuffer buffer() const { return buffer_; }
-	VkDeviceMemory memory() const { return memory_; }
-	VkDeviceSize size() const { return size_; }
+	VkBuffer buffer() const { return mAllocatedBuffer.buffer; }
+	VmaAllocation allocation() const { return mAllocatedBuffer.allocation; }
 
 	void upload(const void* data, VkDeviceSize size);
 
 private:
-	const VulkanContext& context_;
-	VkBuffer buffer_ = VK_NULL_HANDLE;
-	VkDeviceMemory memory_ = VK_NULL_HANDLE;
-	VkDeviceSize size_ = 0;
+	VulkanContext& mContext;
+	VkDeviceSize mSize;
 
-	void createBuffer(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	VulkanMemory::AllocatedBuffer mAllocatedBuffer;
 };

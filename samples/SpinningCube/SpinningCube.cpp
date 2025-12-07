@@ -8,6 +8,7 @@
 #include <vulkanbackend/VulkanDescriptorSetLayout.h>
 #include <vulkanbackend/VulkanPipelineLayout.h>
 #include <vulkanbackend/VulkanPipeline.h>
+#include <vulkanbackend/VulkanBuffer.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,37 +19,37 @@ struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
 };
-//
-//static const Vertex cubeVertices[] = {
-//    {{-1, -1, -1}, {1,0,0}},
-//    {{ 1, -1, -1}, {0,1,0}},
-//    {{ 1,  1, -1}, {0,0,1}},
-//    {{-1,  1, -1}, {1,1,0}},
-//    {{-1, -1,  1}, {1,0,1}},
-//    {{ 1, -1,  1}, {0,1,1}},
-//    {{ 1,  1,  1}, {1,1,1}},
-//    {{-1,  1,  1}, {0,0,0}},
-//};
-//
-//static const uint16_t cubeIndices[] = {
-//    0,1,2,2,3,0,
-//    4,5,6,6,7,4,
-//    0,4,7,7,3,0,
-//    1,5,6,6,2,1,
-//    3,2,6,6,7,3,
-//    0,1,5,5,4,0,
-//};
-//
-//struct CameraUBO {
-//    glm::mat4 viewProj;
-//};
+
+static const Vertex cubeVertices[] = {
+    {{-1, -1, -1}, {1,0,0}},
+    {{ 1, -1, -1}, {0,1,0}},
+    {{ 1,  1, -1}, {0,0,1}},
+    {{-1,  1, -1}, {1,1,0}},
+    {{-1, -1,  1}, {1,0,1}},
+    {{ 1, -1,  1}, {0,1,1}},
+    {{ 1,  1,  1}, {1,1,1}},
+    {{-1,  1,  1}, {0,0,0}},
+};
+
+static const uint16_t cubeIndices[] = {
+    0,1,2,2,3,0,
+    4,5,6,6,7,4,
+    0,4,7,7,3,0,
+    1,5,6,6,2,1,
+    3,2,6,6,7,3,
+    0,1,5,5,4,0,
+};
+
+struct CameraUBO {
+    glm::mat4 viewProj;
+};
 
 int main() {
     // -----------------------------------------
     // 1. Window
     // -----------------------------------------
 
-    Window window({"Spinning Cube Sample", 1080, 720});
+    Window window({ "Spinning Cube Sample", 1080, 720 });
 
     // -----------------------------------------
     // 2. Vulkan context
@@ -123,31 +124,32 @@ int main() {
         { {offsetof(Vertex, pos)},
         offsetof(Vertex, color) }
     );
-//    Pipeline pipeline = PipelineBuilder()
-//        .setRenderPass(renderPass)
-//        .setPipelineLayout(pipelineLayout)
-//        .setShaders(vert, frag)
-//        .addVertexBinding<Vertex>()
-//        .addVertexAttribute(0, Format::RGB32F, offsetof(Vertex, pos))
-//        .addVertexAttribute(1, Format::RGB32F, offsetof(Vertex, color))
-//        .enableDepthTest(true)
-//        .build(ctx);
-//
-//    // -----------------------------------------
-//    // 8. Buffers (vertex, index, uniform)
-//    // -----------------------------------------
-//    Buffer vertexBuffer = ctx.createBuffer(
-//        BufferUsage::Vertex,
-//        cubeVertices, sizeof(cubeVertices)
-//    );
-//
-//    Buffer indexBuffer = ctx.createBuffer(
-//        BufferUsage::Index,
-//        cubeIndices, sizeof(cubeIndices)
-//    );
-//
-//    Buffer cameraUBO = ctx.createUniformBuffer(sizeof(CameraUBO));
-//
+
+    // -----------------------------------------
+    // 8. Buffers (vertex, index, uniform)
+    // -----------------------------------------
+    VulkanBuffer vertexBuffer = VulkanBuffer(
+        ctx,
+        cubeVertices,
+        sizeof(cubeVertices),
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+    );
+
+   VulkanBuffer indexBuffer = VulkanBuffer(
+        ctx,
+        cubeIndices,
+        sizeof(cubeIndices),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+    );
+
+    VulkanBuffer cameraUBO = VulkanBuffer(
+        ctx,
+        sizeof(CameraUBO),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
+
 //    // -----------------------------------------
 //    // 9. Descriptor set
 //    // -----------------------------------------
