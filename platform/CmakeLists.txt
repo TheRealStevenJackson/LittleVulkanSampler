@@ -1,5 +1,6 @@
 add_library(Platform STATIC
     Window.cpp
+    Clock.cpp
 )
 
 target_include_directories(Platform

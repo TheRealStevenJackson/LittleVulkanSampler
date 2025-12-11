@@ -14,6 +14,7 @@ public:
 	uint32_t imageCount() const { return mImageCount; }
 	const std::vector<VkImageView>& getImageViews() const { return imageViews_; }
 	VkSwapchainKHR getHandle() const { return swapchain_; }
+	float getAspectRatio() const { return extent_.width / extent_.height; }
 
 private:
 	void createSwapchain(GLFWwindow*);

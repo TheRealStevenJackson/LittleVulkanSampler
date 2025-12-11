@@ -1,4 +1,5 @@
 #include <platform/Window.h>
+#include <platform/Clock.h>
 #include <vulkanbackend/VulkanContext.h>
 #include <VulkanBackend/VulkanSwapchain.h>
 #include <VulkanBackend/VulkanRenderPass.h>
@@ -178,55 +179,57 @@ int main() {
 //    // -----------------------------------------
 //    // Main loop
 //    // -----------------------------------------
-//    float angle = 0.0f;
-//
-//    while (!window.shouldClose()) {
-//        window.pollEvents();
-//
-//        float dt = window.getDeltaTime();
-//        angle += dt * 1.0f;
-//
-//        // Update UBO
-//        glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 1, 0));
-//
-//        glm::mat4 view = glm::lookAt(
-//            glm::vec3(3, 3, 3),
-//            glm::vec3(0, 0, 0),
-//            glm::vec3(0, 1, 0)
-//        );
-//
-//        glm::mat4 proj = glm::perspective(
-//            glm::radians(60.0f),
-//            swapchain.getAspectRatio(),
-//            0.1f, 100.f
-//        );
-//        proj[1][1] *= -1;
-//
-//        CameraUBO u;
-//        u.viewProj = proj * view * model;
-//        cameraUBO.upload(&u, sizeof(u));
-//
-//        // Acquire frame
-//        uint32_t imageIndex = frames.beginFrame(swapchain);
-//
-//        CommandBuffer& cmd = frames.getCommandBuffer();
-//
-//        // Begin render pass
-//        cmd.begin(renderPass, framebuffers[imageIndex]);
-//
-//        cmd.bindPipeline(pipeline);
-//        cmd.bindDescriptorSet(pipelineLayout, descriptorSet);
-//
-//        cmd.bindVertexBuffer(vertexBuffer);
-//        cmd.bindIndexBuffer(indexBuffer);
-//
-//        cmd.drawIndexed(std::size(cubeIndices));
-//
-//        cmd.endRenderPass();
-//
-//        frames.endFrame(cmd, swapchain, imageIndex);
-//    }
-//
-//    ctx.deviceWaitIdle();
+    Clock clock = Clock();
+    float angle = 0.0f;
+
+    while (!window.shouldClose()) {
+        window.pollEvents();
+
+        clock.tick();
+        float dt = clock.deltaTime();
+        //angle += dt * 1.0f;
+
+        //// Update UBO
+        //glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 1, 0));
+
+        //glm::mat4 view = glm::lookAt(
+        //    glm::vec3(3, 3, 3),
+        //    glm::vec3(0, 0, 0),
+        //    glm::vec3(0, 1, 0)
+        //);
+
+        //glm::mat4 proj = glm::perspective(
+        //    glm::radians(60.0f),
+        //    swapchain.getAspectRatio(),
+        //    0.1f, 100.f
+        //);
+        //proj[1][1] *= -1;
+
+        //CameraUBO u;
+        //u.viewProj = proj * view * model;
+        //cameraUBO.upload(&u, sizeof(u));
+
+        //// Acquire frame
+        //uint32_t imageIndex = frames.beginFrame(swapchain);
+
+        //CommandBuffer& cmd = frames.getCommandBuffer();
+
+        //// Begin render pass
+        //cmd.begin(renderPass, framebuffers[imageIndex]);
+
+        //cmd.bindPipeline(pipeline);
+        //cmd.bindDescriptorSet(pipelineLayout, descriptorSet);
+
+        //cmd.bindVertexBuffer(vertexBuffer);
+        //cmd.bindIndexBuffer(indexBuffer);
+
+        //cmd.drawIndexed(std::size(cubeIndices));
+
+        //cmd.endRenderPass();
+
+        //frames.endFrame(cmd, swapchain, imageIndex);
+    }
+
+    //ctx.deviceWaitIdle();
     return 0;
 }
