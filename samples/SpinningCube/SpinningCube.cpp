@@ -14,6 +14,7 @@
 #include <vulkanbackend/VulkanDescriptorSet.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <filesystem>
@@ -144,13 +145,18 @@ int main() {
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT
     );
 
+    glm::mat4 model = glm::mat4(1.0f);   // Identity
     VulkanBuffer cameraUBO = VulkanBuffer(
         ctx,
+        glm::value_ptr(model),
         sizeof(CameraUBO),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
     );
+
+    std::cout << "cameraUBO successfully created" << std::endl;
 
     // -----------------------------------------
     // 9. Descriptor set
@@ -171,14 +177,14 @@ int main() {
         descriptorSets.back().writeUniformBuffer(cameraUBO, sizeof(CameraUBO));
     }
 
-//    // -----------------------------------------
-//    // 10. Frame manager (command buffers + sync)
-//    // -----------------------------------------
-//    FrameManager frames(ctx, swapchain.getImageCount());
-//
-//    // -----------------------------------------
-//    // Main loop
-//    // -----------------------------------------
+    //// -----------------------------------------
+    //// 10. Frame manager (command buffers + sync)
+    //// -----------------------------------------
+    //FrameManager frames(ctx, swapchain.getImageCount());
+
+    //// -----------------------------------------
+    //// Main loop
+    //// -----------------------------------------
     Clock clock = Clock();
     float angle = 0.0f;
 
@@ -187,27 +193,27 @@ int main() {
 
         clock.tick();
         float dt = clock.deltaTime();
-        //angle += dt * 1.0f;
+        angle += dt * 1.0f;
 
-        //// Update UBO
-        //glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 1, 0));
+        // Update UBO
+        glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 1, 0));
 
-        //glm::mat4 view = glm::lookAt(
-        //    glm::vec3(3, 3, 3),
-        //    glm::vec3(0, 0, 0),
-        //    glm::vec3(0, 1, 0)
-        //);
+        glm::mat4 view = glm::lookAt(
+            glm::vec3(3, 3, 3),
+            glm::vec3(0, 0, 0),
+            glm::vec3(0, 1, 0)
+        );
 
-        //glm::mat4 proj = glm::perspective(
-        //    glm::radians(60.0f),
-        //    swapchain.getAspectRatio(),
-        //    0.1f, 100.f
-        //);
-        //proj[1][1] *= -1;
+        glm::mat4 proj = glm::perspective(
+            glm::radians(60.0f),
+            swapchain.getAspectRatio(),
+            0.1f, 100.f
+        );
+        proj[1][1] *= -1;
 
-        //CameraUBO u;
-        //u.viewProj = proj * view * model;
-        //cameraUBO.upload(&u, sizeof(u));
+        CameraUBO u;
+        u.viewProj = proj * view * model;
+        cameraUBO.upload(&u, sizeof(u));
 
         //// Acquire frame
         //uint32_t imageIndex = frames.beginFrame(swapchain);
