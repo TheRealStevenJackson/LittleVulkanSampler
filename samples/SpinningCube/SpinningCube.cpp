@@ -9,6 +9,8 @@
 #include <vulkanbackend/VulkanPipelineLayout.h>
 #include <vulkanbackend/VulkanPipeline.h>
 #include <vulkanbackend/VulkanBuffer.h>
+#include <vulkanbackend/VulkanDescriptorPool.h>
+#include <vulkanbackend/VulkanDescriptorSet.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -77,7 +79,6 @@ int main() {
         depthImages[0].format()
     );
 
-    std::cout << "End of program." << std::endl;
     // -----------------------------------------
     // 4. Framebuffers
     // -----------------------------------------
@@ -150,14 +151,25 @@ int main() {
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 
-//    // -----------------------------------------
-//    // 9. Descriptor set
-//    // -----------------------------------------
-//    DescriptorSet descriptorSet =
-//        ctx.allocateDescriptorSet(descriptorLayout);
-//
-//    descriptorSet.writeUniformBuffer(0, cameraUBO);
-//
+    // -----------------------------------------
+    // 9. Descriptor set
+    // -----------------------------------------
+    VulkanDescriptorPool descriptorPool = VulkanDescriptorPool(
+        ctx,
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+    );
+
+    std::vector<VulkanDescriptorSet> descriptorSets;
+    descriptorSets.reserve(swapchain.imageCount());
+    for (uint32_t i = 0; i < swapchain.imageCount(); i++) {
+        descriptorSets.emplace_back(
+            ctx,
+            descriptorPool,
+            descriptorLayout
+        );
+        descriptorSets.back().writeUniformBuffer(cameraUBO, sizeof(CameraUBO));
+    }
+
 //    // -----------------------------------------
 //    // 10. Frame manager (command buffers + sync)
 //    // -----------------------------------------
