@@ -23,11 +23,11 @@ void VulkanCommandBuffer::begin()
 	}
 }
 
-void VulkanCommandBuffer::beginRenderPass(VulkanRenderPass& renderPass, VulkanFramebuffer& framebuffer)
+void VulkanCommandBuffer::beginRenderPass(VulkanRenderPass& renderPass, VulkanFramebuffer& framebuffer, VkExtent2D extent)
 {
 	VkRect2D renderArea;
-	renderArea.extent.width = 720;
-	renderArea.extent.height = 720;
+	renderArea.extent.width = extent.width;
+	renderArea.extent.height = extent.height;
 	renderArea.offset = { 0, 0 };
 
 	std::array<VkClearValue, 2> clearValues{};

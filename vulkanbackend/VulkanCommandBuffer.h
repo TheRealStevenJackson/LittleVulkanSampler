@@ -13,7 +13,7 @@ public:
 	VkCommandBuffer getHandle() const { return mCommandBuffer; }
 
 	void begin();
-	void beginRenderPass(VulkanRenderPass&, VulkanFramebuffer&);
+	void beginRenderPass(VulkanRenderPass&, VulkanFramebuffer&, VkExtent2D);
 	void bindPipeline(VulkanPipeline&);
 	void setViewport(VkExtent2D);
 	void setScissor(VkExtent2D);

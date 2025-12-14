@@ -224,7 +224,7 @@ int main() {
 
         // Begin render pass
 
-        cmd.beginRenderPass(renderPass, framebuffers[imageIndex]);
+        cmd.beginRenderPass(renderPass, framebuffers[imageIndex], swapchain.getExtent());
 
         cmd.bindPipeline(pipeline);
         cmd.setViewport(swapchain.getExtent());
