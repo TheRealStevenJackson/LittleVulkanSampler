@@ -13,7 +13,7 @@ add_library(VulkanBackend STATIC
 	VulkanPipeline.cpp
 	VulkanDescriptorPool.cpp 
 	VulkanDescriptorSet.cpp 
-)
+ "VulkanFrameManager.cpp" "VulkanFrameManager.h" "VulkanCommandBuffer.cpp" "VulkanCommandBuffer.h")
 
 target_include_directories(VulkanBackend
 	PUBLIC

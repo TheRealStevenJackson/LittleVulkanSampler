@@ -1,6 +1,7 @@
 #include "vulkanbackend/VulkanPipeline.h"
 
 #include <iostream>
+#include <array>
 
 VulkanPipeline::VulkanPipeline(VulkanContext& context, VulkanRenderPass& renderPass,
 	VulkanPipelineLayout& pipelineLayout, VulkanShaderModule& vert, VulkanShaderModule& frag,
@@ -51,23 +52,34 @@ void VulkanPipeline::createPipeline()
 	vertexBindingDescription.stride = mStride;
 	vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
-	for (int i = 0; i < mOffsetCount; i++) {
-		VkVertexInputAttributeDescription vertexAttributeDescription{};
-		vertexAttributeDescription.location = i;
-		vertexAttributeDescription.binding = 0;
-		vertexAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-		vertexAttributeDescription.offset = mOffsets[i];
+	std::array<VkVertexInputAttributeDescription, 2> ad{};
+	ad[0].location = 0;
+	ad[0].binding = 0;
+	ad[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	ad[0].offset = mOffsets[0];
 
-		attributeDescriptions.push_back(vertexAttributeDescription);
-	}
+	ad[1].location = 1;
+	ad[1].binding = 0;
+	ad[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+	ad[1].offset = mOffsets[1];
+
+	//std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+	//for (int i = 0; i < mOffsetCount; i++) {
+	//	VkVertexInputAttributeDescription vertexAttributeDescription{};
+	//	vertexAttributeDescription.location = i;
+	//	vertexAttributeDescription.binding = 0;
+	//	vertexAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+	//	vertexAttributeDescription.offset = mOffsets[i];
+
+	//	attributeDescriptions.push_back(vertexAttributeDescription);
+	//}
 
 	VkPipelineVertexInputStateCreateInfo vertexInfo{};
 	vertexInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInfo.vertexBindingDescriptionCount = 1;
 	vertexInfo.pVertexBindingDescriptions = &vertexBindingDescription;
 	vertexInfo.vertexAttributeDescriptionCount = mOffsetCount;
-	vertexInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+	vertexInfo.pVertexAttributeDescriptions = ad.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -84,7 +96,7 @@ void VulkanPipeline::createPipeline()
 	rasterState.depthClampEnable = VK_FALSE;
 	rasterState.rasterizerDiscardEnable = VK_FALSE;
 	rasterState.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterState.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterState.cullMode = VK_CULL_MODE_NONE;
 	rasterState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterState.depthBiasEnable = VK_FALSE;
 	rasterState.lineWidth = 1.0;

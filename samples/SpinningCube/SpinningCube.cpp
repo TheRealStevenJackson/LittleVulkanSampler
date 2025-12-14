@@ -12,6 +12,7 @@
 #include <vulkanbackend/VulkanBuffer.h>
 #include <vulkanbackend/VulkanDescriptorPool.h>
 #include <vulkanbackend/VulkanDescriptorSet.h>
+#include <vulkanbackend/VulkanFrameManager.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -53,7 +54,7 @@ int main() {
     // 1. Window
     // -----------------------------------------
 
-    Window window({ "Spinning Cube Sample", 1080, 720 });
+    Window window({ "Spinning Cube Sample", 720, 720 });
 
     // -----------------------------------------
     // 2. Vulkan context
@@ -177,14 +178,14 @@ int main() {
         descriptorSets.back().writeUniformBuffer(cameraUBO, sizeof(CameraUBO));
     }
 
-    //// -----------------------------------------
-    //// 10. Frame manager (command buffers + sync)
-    //// -----------------------------------------
-    //FrameManager frames(ctx, swapchain.getImageCount());
+    // -----------------------------------------
+    // 10. Frame manager (command buffers + sync)
+    // -----------------------------------------
+    VulkanFrameManager frames(ctx, swapchain.imageCount(), swapchain);
 
-    //// -----------------------------------------
-    //// Main loop
-    //// -----------------------------------------
+    // -----------------------------------------
+    // Main loop
+    // -----------------------------------------
     Clock clock = Clock();
     float angle = 0.0f;
 
@@ -215,27 +216,31 @@ int main() {
         u.viewProj = proj * view * model;
         cameraUBO.upload(&u, sizeof(u));
 
-        //// Acquire frame
-        //uint32_t imageIndex = frames.beginFrame(swapchain);
+        // Acquire frame
+        uint32_t imageIndex = frames.beginFrame();
 
-        //CommandBuffer& cmd = frames.getCommandBuffer();
+        VulkanCommandBuffer cmd = VulkanCommandBuffer(frames.getCommandBuffer());
+        cmd.begin();
 
-        //// Begin render pass
-        //cmd.begin(renderPass, framebuffers[imageIndex]);
+        // Begin render pass
 
-        //cmd.bindPipeline(pipeline);
-        //cmd.bindDescriptorSet(pipelineLayout, descriptorSet);
+        cmd.beginRenderPass(renderPass, framebuffers[imageIndex]);
 
-        //cmd.bindVertexBuffer(vertexBuffer);
-        //cmd.bindIndexBuffer(indexBuffer);
+        cmd.bindPipeline(pipeline);
+        cmd.setViewport(swapchain.getExtent());
+        cmd.setScissor(swapchain.getExtent());
+        cmd.bindDescriptorSet(pipelineLayout, descriptorSets[imageIndex]);
 
-        //cmd.drawIndexed(std::size(cubeIndices));
+        cmd.bindVertexBuffer(vertexBuffer);
+        cmd.bindIndexBuffer(indexBuffer);
 
-        //cmd.endRenderPass();
+        cmd.drawIndexed(std::size(cubeIndices));
 
-        //frames.endFrame(cmd, swapchain, imageIndex);
+        cmd.endRenderPass();
+
+        frames.endFrame(cmd.getHandle(), imageIndex);
     }
 
-    //ctx.deviceWaitIdle();
+    vkDeviceWaitIdle(ctx.device());
     return 0;
 }

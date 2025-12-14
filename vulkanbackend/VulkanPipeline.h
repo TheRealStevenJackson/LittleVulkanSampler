@@ -11,6 +11,8 @@ public:
 		VulkanShaderModule&, VulkanShaderModule&, uint32_t, uint32_t, std::vector<uint32_t>);
 	~VulkanPipeline();
 
+	VkPipeline pipeline() const { return mPipeline; }
+
 private:
 	void createPipeline();
 

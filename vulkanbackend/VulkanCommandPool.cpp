@@ -2,6 +2,7 @@
 #include "vulkanbackend/VulkanContext.h"
 
 #include <stdexcept>
+#include <iostream>
 
 VulkanCommandPool::VulkanCommandPool(const VulkanContext& context)
 	: context_(context) {
@@ -13,12 +14,16 @@ VulkanCommandPool::VulkanCommandPool(const VulkanContext& context)
 	if (vkCreateCommandPool(context_.device(), &poolInfo, nullptr, &pool_) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create command pool.");
 	}
+
+	std::cout << "Created command pool." << std::endl;
 }
 
 VulkanCommandPool::~VulkanCommandPool() {
 	if (pool_ != VK_NULL_HANDLE) {
 		vkDestroyCommandPool(context_.device(), pool_, nullptr);
 	}
+
+	std::cout << "Destroyed command pool." << std::endl;
 }
 
 std::vector<VkCommandBuffer> VulkanCommandPool::allocate(uint32_t count) {

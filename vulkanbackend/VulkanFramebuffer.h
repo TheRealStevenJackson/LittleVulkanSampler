@@ -7,6 +7,8 @@ public:
 	VulkanFramebuffer(VulkanContext&, VkRenderPass, VkImageView, VkImageView, VkExtent2D);
 	~VulkanFramebuffer();
 
+	VkFramebuffer framebuffer() const { return mFramebuffer; }
+
 private:
 	void createFramebuffer();
 
