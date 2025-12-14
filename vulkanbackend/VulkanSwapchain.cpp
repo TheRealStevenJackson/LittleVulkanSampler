@@ -4,12 +4,19 @@
 #include <limits>
 
 VulkanSwapchain::VulkanSwapchain(VulkanContext& context, GLFWwindow* window)
-	: context_(context) {
+	: context_(context),
+	mWindow(window)
+{
 	createSwapchain(window);
 	createImageViews();
 }
 
 VulkanSwapchain::~VulkanSwapchain() {
+	destroy();
+}
+
+void VulkanSwapchain::destroy()
+{
 	VkDevice device = context_.device();
 	for (auto view : imageViews_) {
 		vkDestroyImageView(device, view, nullptr);
@@ -102,4 +109,12 @@ void VulkanSwapchain::createImageViews() {
 	}
 
 	std::cout << "Created " << imageViews_.size() << " swapchain image views." << std::endl;
+}
+
+void VulkanSwapchain::recreate()
+{
+	int width = 0;
+	int height = 0;
+	glfwGetFramebufferSize(mWindow, &width, &height);
+	// TODO: finish recreating swapchain
 }

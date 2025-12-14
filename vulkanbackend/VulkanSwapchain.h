@@ -9,6 +9,8 @@ public:
 	VulkanSwapchain(VulkanContext&, GLFWwindow*);
 	~VulkanSwapchain();
 
+	void recreate();
+
 	VkFormat getImageFormat() const { return imageFormat_; }
 	VkExtent2D getExtent() const { return extent_; }
 	uint32_t imageCount() const { return mImageCount; }
@@ -17,10 +19,12 @@ public:
 	float getAspectRatio() const { return extent_.width / extent_.height; }
 
 private:
+	void destroy();
 	void createSwapchain(GLFWwindow*);
 	void createImageViews();
 
 	VulkanContext& context_;
+	GLFWwindow* mWindow;
 	VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
 	VkFormat imageFormat_;
 	VkExtent2D extent_;

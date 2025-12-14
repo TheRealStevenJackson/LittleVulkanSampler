@@ -66,6 +66,7 @@ int main() {
     // -----------------------------------------
     VulkanSwapchain swapchain(ctx, window.getHandle());
 
+    // TODO: Move depth image and view to swapchain
     std::vector<VulkanImage> depthImages;
     depthImages.reserve(swapchain.imageCount());
     for (uint32_t i = 0; i < swapchain.imageCount(); i++) {
@@ -85,6 +86,7 @@ int main() {
     // -----------------------------------------
     // 4. Framebuffers
     // -----------------------------------------
+    // TODO: Move framebuffer to swapchain
     std::vector<VulkanFramebuffer> framebuffers;
     framebuffers.reserve(swapchain.imageCount());
     for (uint32_t i = 0; i < swapchain.imageCount(); i++) {
