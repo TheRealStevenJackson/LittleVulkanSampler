@@ -13,6 +13,8 @@
 #include <vulkanbackend/VulkanDescriptorPool.h>
 #include <vulkanbackend/VulkanDescriptorSet.h>
 #include <vulkanbackend/VulkanFrameManager.h>
+#include <assets/ObjLoader.h>
+#include <renderer/Mesh.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -20,29 +22,11 @@
 #include <iostream>
 #include <filesystem>
 
+// Vertex structure matching the loaded mesh format (pos, normal, texCoord)
 struct Vertex {
     glm::vec3 pos;
-    glm::vec3 color;
-};
-
-static const Vertex cubeVertices[] = {
-    {{-1, -1, -1}, {1,0,0}},
-    {{ 1, -1, -1}, {0,1,0}},
-    {{ 1,  1, -1}, {0,0,1}},
-    {{-1,  1, -1}, {1,1,0}},
-    {{-1, -1,  1}, {1,0,1}},
-    {{ 1, -1,  1}, {0,1,1}},
-    {{ 1,  1,  1}, {1,1,1}},
-    {{-1,  1,  1}, {0,0,0}},
-};
-
-static const uint16_t cubeIndices[] = {
-    0,1,2,2,3,0,
-    4,5,6,6,7,4,
-    0,4,7,7,3,0,
-    1,5,6,6,2,1,
-    3,2,6,6,7,3,
-    0,1,5,5,4,0,
+    glm::vec3 normal;
+    glm::vec2 texCoord;
 };
 
 struct CameraUBO {
@@ -60,6 +44,40 @@ int main() {
     // 2. Vulkan context
     // -----------------------------------------
     VulkanContext ctx(window.getHandle());
+
+    // -----------------------------------------
+    // 2.5. Object loader
+    // -----------------------------------------
+    ObjLoader objLoader(ctx);
+    
+    // Load mesh from resources directory - try multiple paths
+    std::vector<std::string> pathsToTry = {
+        "resources/Meshes/nes-controller/controller_wireless_1024.obj",  // Relative to executable
+        "../../resources/Meshes/nes-controller/controller_wireless_1024.obj",  // Relative from build subdirectory
+        "../../../resources/Meshes/nes-controller/controller_wireless_1024.obj"  // Relative from deeper build subdirectory
+    };
+    
+    std::vector<std::unique_ptr<Mesh>> meshes;
+    std::string loadedPath;
+    for (const auto& path : pathsToTry) {
+        meshes = objLoader.loadFromFile(path);
+        if (!meshes.empty()) {
+            loadedPath = path;
+            break;
+        }
+    }
+    
+    if (meshes.empty()) {
+        std::cerr << "Failed to load mesh. Tried paths:" << std::endl;
+        for (const auto& path : pathsToTry) {
+            std::cerr << "  - " << path << std::endl;
+        }
+        return -1;
+    }
+    std::cout << "Successfully loaded " << meshes.size() << " mesh(es) from " << loadedPath << std::endl;
+    
+    // Use the first loaded mesh
+    auto& loadedMesh = meshes[0];
 
     // -----------------------------------------
     // 3. Swapchain + RenderPass
@@ -126,28 +144,15 @@ int main() {
         vert,
         frag,
         sizeof(Vertex),
-        2,
-        { {offsetof(Vertex, pos)},
-        offsetof(Vertex, color) }
+        3,
+        { offsetof(Vertex, pos),
+          offsetof(Vertex, normal),
+          offsetof(Vertex, texCoord) }
     );
 
     // -----------------------------------------
-    // 8. Buffers (vertex, index, uniform)
+    // 8. Uniform buffer
     // -----------------------------------------
-    VulkanBuffer vertexBuffer = VulkanBuffer(
-        ctx,
-        cubeVertices,
-        sizeof(cubeVertices),
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-    );
-
-   VulkanBuffer indexBuffer = VulkanBuffer(
-        ctx,
-        cubeIndices,
-        sizeof(cubeIndices),
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-    );
-
     glm::mat4 model = glm::mat4(1.0f);   // Identity
     VulkanBuffer cameraUBO = VulkanBuffer(
         ctx,
@@ -202,7 +207,7 @@ int main() {
         glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 1, 0));
 
         glm::mat4 view = glm::lookAt(
-            glm::vec3(3, 3, 3),
+            glm::vec3(0.1, 0.1, 0.1),
             glm::vec3(0, 0, 0),
             glm::vec3(0, 1, 0)
         );
@@ -210,7 +215,7 @@ int main() {
         glm::mat4 proj = glm::perspective(
             glm::radians(60.0f),
             swapchain.getAspectRatio(),
-            0.1f, 100.f
+            0.01f, 200.0f
         );
         proj[1][1] *= -1;
 
@@ -233,10 +238,14 @@ int main() {
         cmd.setScissor(swapchain.getExtent());
         cmd.bindDescriptorSet(pipelineLayout, descriptorSets[imageIndex]);
 
-        cmd.bindVertexBuffer(vertexBuffer);
-        cmd.bindIndexBuffer(indexBuffer);
-
-        cmd.drawIndexed(std::size(cubeIndices));
+        // Use the loaded mesh instead of hardcoded buffers
+        loadedMesh->bindVertexBuffer(cmd.getHandle());
+        if (loadedMesh->hasIndices()) {
+            loadedMesh->bindIndexBuffer(cmd.getHandle());
+            loadedMesh->draw(cmd.getHandle());
+        } else {
+            loadedMesh->draw(cmd.getHandle());
+        }
 
         cmd.endRenderPass();
 

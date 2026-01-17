@@ -52,34 +52,44 @@ void VulkanPipeline::createPipeline()
 	vertexBindingDescription.stride = mStride;
 	vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	std::array<VkVertexInputAttributeDescription, 2> ad{};
-	ad[0].location = 0;
-	ad[0].binding = 0;
-	ad[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	ad[0].offset = mOffsets[0];
+	// Create attribute descriptions dynamically based on offset count
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+	for (uint32_t i = 0; i < mOffsetCount; i++) {
+		VkVertexInputAttributeDescription vertexAttributeDescription{};
+		vertexAttributeDescription.location = i;
+		vertexAttributeDescription.binding = 0;
+		vertexAttributeDescription.offset = mOffsets[i];
 
-	ad[1].location = 1;
-	ad[1].binding = 0;
-	ad[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-	ad[1].offset = mOffsets[1];
+		// Determine format based on attribute size (inferred from offset differences)
+		// For the last attribute, use stride to determine size
+		uint32_t attributeSize;
+		if (i < mOffsetCount - 1) {
+			attributeSize = mOffsets[i + 1] - mOffsets[i];
+		} else {
+			attributeSize = mStride - mOffsets[i];
+		}
 
-	//std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
-	//for (int i = 0; i < mOffsetCount; i++) {
-	//	VkVertexInputAttributeDescription vertexAttributeDescription{};
-	//	vertexAttributeDescription.location = i;
-	//	vertexAttributeDescription.binding = 0;
-	//	vertexAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-	//	vertexAttributeDescription.offset = mOffsets[i];
+		// Map size to format (assuming float components)
+		if (attributeSize == 8) {  // 2 floats = vec2
+			vertexAttributeDescription.format = VK_FORMAT_R32G32_SFLOAT;
+		} else if (attributeSize == 12) {  // 3 floats = vec3
+			vertexAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+		} else if (attributeSize == 16) {  // 4 floats = vec4
+			vertexAttributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+		} else {
+			// Default to vec3 for unknown sizes
+			vertexAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+		}
 
-	//	attributeDescriptions.push_back(vertexAttributeDescription);
-	//}
+		attributeDescriptions.push_back(vertexAttributeDescription);
+	}
 
 	VkPipelineVertexInputStateCreateInfo vertexInfo{};
 	vertexInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInfo.vertexBindingDescriptionCount = 1;
 	vertexInfo.pVertexBindingDescriptions = &vertexBindingDescription;
-	vertexInfo.vertexAttributeDescriptionCount = mOffsetCount;
-	vertexInfo.pVertexAttributeDescriptions = ad.data();
+	vertexInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for FirstVulkanEngine, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 project ("FirstVulkanEngine")
 
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
@@ -17,8 +17,11 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_subdirectory(assets)
+add_subdirectory(external)
 add_subdirectory(platform)
 add_subdirectory(vulkanbackend)
+add_subdirectory(renderer)
 add_subdirectory(renderengine)
 add_subdirectory(samples)
 

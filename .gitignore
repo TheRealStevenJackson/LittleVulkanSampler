@@ -4,6 +4,10 @@ out/
 bin/
 bin-int/
 
+# External dependencies
+external/tinygltf/
+external/tinyobjloader/
+
 # CMake
 CMakeCache.txt
 CMakeFiles/

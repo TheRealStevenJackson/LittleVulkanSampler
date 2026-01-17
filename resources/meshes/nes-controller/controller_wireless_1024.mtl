@@ -1,0 +1,16 @@
+# Blender MTL File: 'controller_wireless_1024.blend'
+# Material Count: 1
+
+newmtl Controller
+Ns 575.999996
+Ka 1.000000 1.000000 1.000000
+Kd 0.247712 0.247712 0.247712
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump controller_Normal_1024.png
+map_Kd controller_BaseColor_1024.png
+map_Ns controller_Roughness_1024.png
+refl controller_Metallic_1024.png

@@ -6,6 +6,8 @@ target_link_libraries(SpinningCube
 	PRIVATE
 		Platform
 		VulkanBackend
+		Assets
+		Renderer
 )
 
 find_program(GLSLC_EXECUTABLE glslc)
@@ -50,3 +52,14 @@ add_dependencies(SpinningCube SpinningCubeShaders)
 # Attach SPIR-V outputs as sources of the executable
 set_source_files_properties(${SPIRV_OUTPUTS} PROPERTIES GENERATED TRUE)
 target_sources(SpinningCube PRIVATE ${SPIRV_OUTPUTS})
+
+# Copy resources directory to executable directory so it can find resources
+set(RESOURCES_SOURCE_DIR ${CMAKE_SOURCE_DIR}/resources)
+
+# Copy resources on build - copy to the same directory as the executable
+add_custom_command(TARGET SpinningCube POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${RESOURCES_SOURCE_DIR}
+    $<TARGET_FILE_DIR:SpinningCube>/resources
+    COMMENT "Copying resources directory to executable directory"
+)
