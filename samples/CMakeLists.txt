@@ -1,1 +1,2 @@
 add_subdirectory(SpinningCube)
+add_subdirectory(SideScroller)
