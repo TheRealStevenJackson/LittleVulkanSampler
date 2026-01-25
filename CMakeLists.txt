@@ -1,4 +1,4 @@
-﻿# CMakeList.txt : CMake project for FirstVulkanEngine, include source and define
+# CMakeList.txt : CMake project for FirstVulkanEngine, include source and define
 # project specific logic here.
 #
 cmake_minimum_required (VERSION 3.10)
@@ -17,32 +17,9 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(assets)
+add_subdirectory(src/engine/assets)
 add_subdirectory(external)
-add_subdirectory(platform)
-add_subdirectory(vulkanbackend)
-add_subdirectory(renderer)
-add_subdirectory(renderengine)
+add_subdirectory(src/platform)
+add_subdirectory(src/engine/graphics/renderer)
+add_subdirectory(src/engine/graphics)
 add_subdirectory(samples)
-
-add_executable (FirstVulkanEngine
-	FirstVulkanEngine.cpp
-)
-
-if (WIN32)
-    # Force a console subsystem so stdout/stderr appear
-    set_target_properties(FirstVulkanEngine PROPERTIES
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
-    )
-endif()
-
-target_include_directories(VulkanBackend
-	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-target_link_libraries(FirstVulkanEngine
-	PRIVATE 
-		RenderEngine
-		Platform
-)

@@ -1,0 +1,21 @@
+#pragma once
+
+#include "engine/graphics/renderer/VulkanContext.h"
+
+class VulkanFramebuffer {
+public:
+	VulkanFramebuffer(VulkanContext&, VkRenderPass, VkImageView, VkImageView, VkExtent2D);
+	~VulkanFramebuffer();
+
+	VkFramebuffer framebuffer() const { return mFramebuffer; }
+
+private:
+	void createFramebuffer();
+
+	VulkanContext& mContext;
+	VkFramebuffer mFramebuffer = VK_NULL_HANDLE;
+	VkRenderPass mRenderPass = VK_NULL_HANDLE;
+	VkImageView mColorView = VK_NULL_HANDLE;
+	VkImageView mDepthView = VK_NULL_HANDLE;
+	VkExtent2D mExtent;
+};
