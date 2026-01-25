@@ -3,6 +3,7 @@
 #include "tiny_obj_loader.h"
 
 #include <glm/glm.hpp>
+#include <filesystem>
 #include <iostream>
 #include <unordered_map>
 
@@ -28,8 +29,15 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::loadFromFile(const std::string& fi
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 
-	// Load the OBJ file
-	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str());
+	// Resolve MTL base directory: .mtl and texture paths are relative to the OBJ's directory
+	std::filesystem::path obPath(filepath);
+	std::string mtlBaseDir = obPath.has_parent_path()
+		? obPath.parent_path().generic_string()
+		: ".";
+
+	// Load the OBJ file (tinyobjloader loads referenced .mtl from mtlBaseDir)
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+		filepath.c_str(), mtlBaseDir.c_str(), true);
 
 	if (!warn.empty()) {
 		std::cout << "Warning loading OBJ: " << warn << std::endl;

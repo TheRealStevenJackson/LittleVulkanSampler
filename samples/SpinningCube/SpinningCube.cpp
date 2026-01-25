@@ -13,7 +13,7 @@
 #include <engine/graphics/renderer/VulkanDescriptorPool.h>
 #include <engine/graphics/renderer/VulkanDescriptorSet.h>
 #include <engine/graphics/renderer/VulkanFrameManager.h>
-#include <engine/assets/ObjLoader.h>
+#include <engine/assets/AssetManager.h>
 #include <src/engine/graphics/Mesh.h>
 
 #include <glm/glm.hpp>
@@ -46,28 +46,19 @@ int main() {
     VulkanContext ctx(window.getHandle());
 
     // -----------------------------------------
-    // 2.5. Object loader
+    // 2.5. Asset manager (OBJ + MTL loading)
     // -----------------------------------------
-    ObjLoader objLoader(ctx);
-    
-    // Load mesh from resources directory - try multiple paths
+    AssetManager assetManager(ctx);
+
     std::vector<std::string> pathsToTry = {
-        "resources/Meshes/nes-controller/controller_wireless_1024.obj",  // Relative to executable
-        "../../resources/Meshes/nes-controller/controller_wireless_1024.obj",  // Relative from build subdirectory
-        "../../../resources/Meshes/nes-controller/controller_wireless_1024.obj"  // Relative from deeper build subdirectory
+        "resources/meshes/nes-controller/controller_wireless_1024.obj",  // Relative to executable
+        "../../resources/meshes/nes-controller/controller_wireless_1024.obj",  // Relative from build subdirectory
+        "../../../resources/meshes/nes-controller/controller_wireless_1024.obj"  // Relative from deeper build subdirectory
     };
-    
+
     std::vector<std::unique_ptr<Mesh>> meshes;
     std::string loadedPath;
-    for (const auto& path : pathsToTry) {
-        meshes = objLoader.loadFromFile(path);
-        if (!meshes.empty()) {
-            loadedPath = path;
-            break;
-        }
-    }
-    
-    if (meshes.empty()) {
+    if (!assetManager.loadObjFromPaths(pathsToTry, meshes, loadedPath)) {
         std::cerr << "Failed to load mesh. Tried paths:" << std::endl;
         for (const auto& path : pathsToTry) {
             std::cerr << "  - " << path << std::endl;
@@ -75,8 +66,7 @@ int main() {
         return -1;
     }
     std::cout << "Successfully loaded " << meshes.size() << " mesh(es) from " << loadedPath << std::endl;
-    
-    // Use the first loaded mesh
+
     auto& loadedMesh = meshes[0];
 
     // -----------------------------------------
