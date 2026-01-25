@@ -8,6 +8,13 @@ target_include_directories(Assets
 		${CMAKE_CURRENT_SOURCE_DIR}/../..
 )
 
+find_package(Stb REQUIRED)
+
+target_include_directories(Assets
+	PUBLIC
+		${Stb_INCLUDE_DIR}
+)
+
 target_link_libraries(Assets
 	PUBLIC
 		Renderer
