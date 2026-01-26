@@ -2,10 +2,14 @@
 
 #include "engine/assets/AssetManager.h"
 
+#include <vector>
+
 /**
- * Game-layer component that references a mesh by ID.
- * Used by render systems to draw entities; resolve via AssetManager::getMesh().
+ * Game-layer component that references meshes and materials by ID.
+ * Used by render systems to draw entities; resolve via AssetManager::getMesh() and AssetManager::getMaterial().
+ * Can hold multiple meshes and materials for complex entities.
  */
 struct RenderComponent {
-	MeshId meshId = InvalidMeshId;
+	std::vector<MeshId> meshIds;
+	std::vector<MaterialId> materialIds;
 };

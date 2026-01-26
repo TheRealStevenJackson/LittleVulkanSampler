@@ -3,11 +3,16 @@
 AssetManager::AssetManager(VulkanContext& context)
 	: mContext(context)
 	, mObjLoader(context)
+	, mStbLoader(context)
 {
 }
 
 MeshId AssetManager::nextMeshId() {
 	return m_nextMeshId++;
+}
+
+MaterialId AssetManager::nextMaterialId() {
+	return m_nextMaterialId++;
 }
 
 std::vector<MeshId> AssetManager::loadObj(const std::string& filepath) {
@@ -55,4 +60,35 @@ Mesh* AssetManager::getMesh(MeshId id) {
 const Mesh* AssetManager::getMesh(MeshId id) const {
 	auto it = m_meshMap.find(id);
 	return it != m_meshMap.end() ? it->second.get() : nullptr;
+}
+
+Material* AssetManager::getMaterial(MaterialId id) {
+	auto it = m_materialMap.find(id);
+	return it != m_materialMap.end() ? it->second.get() : nullptr;
+}
+
+const Material* AssetManager::getMaterial(MaterialId id) const {
+	auto it = m_materialMap.find(id);
+	return it != m_materialMap.end() ? it->second.get() : nullptr;
+}
+
+std::vector<MaterialPaths> AssetManager::extractMaterialPaths(const std::string& filepath)
+{
+	return mObjLoader.extractMaterialPaths(filepath);
+}
+
+std::vector<MaterialId> AssetManager::loadMaterials(const std::vector<MaterialPaths>& paths)
+{
+	std::vector<MaterialId> materialIds;
+	
+	for (const auto& path : paths) {
+		auto material = mStbLoader.loadMaterial(path);
+		if (material) {
+			MaterialId id = nextMaterialId();
+			m_materialMap[id] = std::move(material);
+			materialIds.push_back(id);
+		}
+	}
+	
+	return materialIds;
 }

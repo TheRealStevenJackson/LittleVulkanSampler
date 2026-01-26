@@ -76,8 +76,17 @@ int main() {
     }
     std::cout << "Successfully loaded " << meshIds.size() << " mesh(es) from " << loadedPath << std::endl;
 
+    // Extract material paths from the MTL file
+    std::vector<MaterialPaths> materialPaths = assetManager.extractMaterialPaths(loadedPath);
+    std::cout << "Extracted " << materialPaths.size() << " material path(s) from MTL" << std::endl;
+
+    // Load materials using StbLoader
+    std::vector<MaterialId> materialIds = assetManager.loadMaterials(materialPaths);
+    std::cout << "Loaded " << materialIds.size() << " material(s)" << std::endl;
+
     Entity entity;
-    entity.renderComponent().meshId = meshIds[0];
+    entity.renderComponent().meshIds = meshIds;
+    entity.renderComponent().materialIds = materialIds;
 
     // -----------------------------------------
     // 3. Swapchain + RenderPass
@@ -271,14 +280,18 @@ int main() {
         cmd.setScissor(swapchain.getExtent());
         cmd.bindDescriptorSet(pipelineLayout, descriptorSets[imageIndex]);
 
-        // Use the mesh from the entity's RenderComponent
-        const Mesh* mesh = assetManager.getMesh(entity.renderComponent().meshId);
-        mesh->bindVertexBuffer(cmd.getHandle());
-        if (mesh->hasIndices()) {
-            mesh->bindIndexBuffer(cmd.getHandle());
-            mesh->draw(cmd.getHandle());
-        } else {
-            mesh->draw(cmd.getHandle());
+        // Use the meshes from the entity's RenderComponent
+        for (MeshId meshId : entity.renderComponent().meshIds) {
+            const Mesh* mesh = assetManager.getMesh(meshId);
+            if (mesh) {
+                mesh->bindVertexBuffer(cmd.getHandle());
+                if (mesh->hasIndices()) {
+                    mesh->bindIndexBuffer(cmd.getHandle());
+                    mesh->draw(cmd.getHandle());
+                } else {
+                    mesh->draw(cmd.getHandle());
+                }
+            }
         }
 
         cmd.endRenderPass();

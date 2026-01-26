@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/engine/graphics/Mesh.h"
+#include "src/engine/graphics/Material.h"
 #include "engine/graphics/renderer/VulkanContext.h"
 
 #include <string>
@@ -19,6 +20,11 @@ public:
 	// Load an OBJ file and combine all shapes into a single mesh
 	// Returns nullptr on failure
 	std::unique_ptr<Mesh> loadFromFileCombined(const std::string& filepath);
+
+	// Extract MaterialPaths from loaded materials
+	// Returns a vector of MaterialPaths, one per material found in the MTL file
+	// baseDir is the directory containing the OBJ/MTL files (for resolving relative texture paths)
+	std::vector<MaterialPaths> extractMaterialPaths(const std::string& filepath);
 
 private:
 	VulkanContext& mContext;

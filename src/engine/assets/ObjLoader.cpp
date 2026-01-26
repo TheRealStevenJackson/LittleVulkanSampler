@@ -169,3 +169,77 @@ std::unique_ptr<Mesh> ObjLoader::loadFromFileCombined(const std::string& filepat
 	std::cout << "Warning: Multiple shapes found, returning first mesh only" << std::endl;
 	return std::move(meshes[0]);
 }
+
+std::vector<MaterialPaths> ObjLoader::extractMaterialPaths(const std::string& filepath) {
+	std::vector<MaterialPaths> materialPaths;
+
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	// Resolve MTL base directory: .mtl and texture paths are relative to the OBJ's directory
+	std::filesystem::path obPath(filepath);
+	std::string mtlBaseDir = obPath.has_parent_path()
+		? obPath.parent_path().generic_string()
+		: ".";
+
+	// Ensure mtlBaseDir ends with a path separator
+	if (!mtlBaseDir.empty() && mtlBaseDir.back() != '/' && mtlBaseDir.back() != '\\') {
+		mtlBaseDir += "/";
+	}
+
+	// Load the OBJ file (tinyobjloader loads referenced .mtl from mtlBaseDir)
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+		filepath.c_str(), mtlBaseDir.c_str(), true);
+
+	if (!warn.empty()) {
+		std::cout << "Warning loading OBJ: " << warn << std::endl;
+	}
+
+	if (!err.empty()) {
+		std::cerr << "Error loading OBJ: " << err << std::endl;
+	}
+
+	if (!ret || materials.empty()) {
+		return materialPaths;
+	}
+
+	// Process each material and extract texture paths
+	for (const auto& mat : materials) {
+		MaterialPaths paths;
+		paths.assetPath = mtlBaseDir;
+
+		// Albedo/Diffuse texture (map_Kd in MTL)
+		if (!mat.diffuse_texname.empty()) {
+			paths.albedoPath = mtlBaseDir + mat.diffuse_texname;
+		}
+
+		// Normal map (norm in MTL for PBR, or map_bump/map_Bump for traditional)
+		if (!mat.normal_texname.empty()) {
+			paths.normalPath = mtlBaseDir + mat.normal_texname;
+		} else if (!mat.bump_texname.empty()) {
+			paths.normalPath = mtlBaseDir + mat.bump_texname;
+		}
+
+		// Metallic texture (map_Pm in MTL for PBR extension, or refl/reflection_texname)
+		if (!mat.metallic_texname.empty()) {
+			paths.metallicPath = mtlBaseDir + mat.metallic_texname;
+		} else if (!mat.reflection_texname.empty()) {
+			// Some exporters use reflection_texname for metallic
+			paths.metallicPath = mtlBaseDir + mat.reflection_texname;
+		}
+
+		// Roughness texture (map_Pr in MTL for PBR extension)
+		if (!mat.roughness_texname.empty()) {
+			paths.roughnessPath = mtlBaseDir + mat.roughness_texname;
+		} else if (!mat.specular_highlight_texname.empty()) {
+			// Some exporters use map_Ns (specular_highlight_texname) for roughness
+			paths.roughnessPath = mtlBaseDir + mat.specular_highlight_texname;
+		}
+
+		materialPaths.push_back(paths);
+	}
+
+	return materialPaths;
+}

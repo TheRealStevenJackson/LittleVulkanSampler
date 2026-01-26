@@ -1,6 +1,7 @@
 add_library(Assets STATIC
 	ObjLoader.cpp
 	AssetManager.cpp
+	StbLoader.cpp
 )
 
 target_include_directories(Assets

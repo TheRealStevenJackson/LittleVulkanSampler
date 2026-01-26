@@ -1,5 +1,6 @@
 add_library(Renderer STATIC
 	Mesh.cpp
+	Material.cpp
 )
 
 target_include_directories(Renderer
