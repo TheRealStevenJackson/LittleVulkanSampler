@@ -14,7 +14,7 @@
 #include <engine/graphics/renderer/VulkanDescriptorSet.h>
 #include <engine/graphics/renderer/VulkanFrameManager.h>
 #include <engine/assets/AssetManager.h>
-#include <src/engine/graphics/Mesh.h>
+#include <game/Entity.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -48,6 +48,7 @@ int main() {
     // -----------------------------------------
     // 2.5. Asset manager (OBJ + MTL loading)
     // -----------------------------------------
+    //TODO: Move to SceneLoader
     AssetManager assetManager(ctx);
 
     std::vector<std::string> pathsToTry = {
@@ -56,18 +57,19 @@ int main() {
         "../../../resources/meshes/nes-controller/controller_wireless_1024.obj"  // Relative from deeper build subdirectory
     };
 
-    std::vector<std::unique_ptr<Mesh>> meshes;
+    std::vector<MeshId> meshIds;
     std::string loadedPath;
-    if (!assetManager.loadObjFromPaths(pathsToTry, meshes, loadedPath)) {
+    if (!assetManager.loadObjFromPaths(pathsToTry, meshIds, loadedPath)) {
         std::cerr << "Failed to load mesh. Tried paths:" << std::endl;
         for (const auto& path : pathsToTry) {
             std::cerr << "  - " << path << std::endl;
         }
         return -1;
     }
-    std::cout << "Successfully loaded " << meshes.size() << " mesh(es) from " << loadedPath << std::endl;
+    std::cout << "Successfully loaded " << meshIds.size() << " mesh(es) from " << loadedPath << std::endl;
 
-    auto& loadedMesh = meshes[0];
+    Entity entity;
+    entity.renderComponent().meshId = meshIds[0];
 
     // -----------------------------------------
     // 3. Swapchain + RenderPass
@@ -228,13 +230,14 @@ int main() {
         cmd.setScissor(swapchain.getExtent());
         cmd.bindDescriptorSet(pipelineLayout, descriptorSets[imageIndex]);
 
-        // Use the loaded mesh instead of hardcoded buffers
-        loadedMesh->bindVertexBuffer(cmd.getHandle());
-        if (loadedMesh->hasIndices()) {
-            loadedMesh->bindIndexBuffer(cmd.getHandle());
-            loadedMesh->draw(cmd.getHandle());
+        // Use the mesh from the entity's RenderComponent
+        const Mesh* mesh = assetManager.getMesh(entity.renderComponent().meshId);
+        mesh->bindVertexBuffer(cmd.getHandle());
+        if (mesh->hasIndices()) {
+            mesh->bindIndexBuffer(cmd.getHandle());
+            mesh->draw(cmd.getHandle());
         } else {
-            loadedMesh->draw(cmd.getHandle());
+            mesh->draw(cmd.getHandle());
         }
 
         cmd.endRenderPass();

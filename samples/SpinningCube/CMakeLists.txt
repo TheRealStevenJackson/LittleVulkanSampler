@@ -8,6 +8,7 @@ target_link_libraries(SpinningCube
 		VulkanBackend
 		Assets
 		Renderer
+		Game
 )
 
 find_program(GLSLC_EXECUTABLE glslc)
