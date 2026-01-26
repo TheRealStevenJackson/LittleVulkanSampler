@@ -4,7 +4,16 @@
 
 VulkanDescriptorPool::VulkanDescriptorPool(VulkanContext& context, VkDescriptorType descriptorType)
 	: mContext(context),
-	mDescriptorType(descriptorType)
+	  mDescriptorType(descriptorType),
+	  mDescriptorCount(1)
+{
+	createDescriptorPool();
+}
+
+VulkanDescriptorPool::VulkanDescriptorPool(VulkanContext& context, VkDescriptorType descriptorType, uint32_t descriptorCount)
+	: mContext(context),
+	  mDescriptorType(descriptorType),
+	  mDescriptorCount(descriptorCount)
 {
 	createDescriptorPool();
 }
@@ -20,7 +29,7 @@ void VulkanDescriptorPool::createDescriptorPool()
 {
 	VkDescriptorPoolSize poolSize{};
 	poolSize.type = mDescriptorType;
-	poolSize.descriptorCount = 1;
+	poolSize.descriptorCount = mDescriptorCount;
 
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

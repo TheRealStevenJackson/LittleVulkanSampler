@@ -19,6 +19,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <vulkan/vulkan.h>
 #include <iostream>
 #include <filesystem>
 
@@ -30,7 +31,14 @@ struct Vertex {
 };
 
 struct CameraUBO {
-    glm::mat4 viewProj;
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+};
+
+struct DirectionalLightUBO {
+    glm::vec4 direction;  // xyz = direction toward light, w = unused
+    glm::vec4 color;      // rgb = light color, w = unused
 };
 
 int main() {
@@ -118,11 +126,19 @@ int main() {
     // -----------------------------------------
     // 6. Pipeline layout + descriptor set layout
     // -----------------------------------------
-    VulkanDescriptorSetLayout descriptorLayout = VulkanDescriptorSetLayout(
-        ctx,
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        VK_SHADER_STAGE_VERTEX_BIT
-    );
+    std::vector<VkDescriptorSetLayoutBinding> layoutBindings(2);
+    layoutBindings[0].binding = 0;
+    layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layoutBindings[0].descriptorCount = 1;
+    layoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    layoutBindings[0].pImmutableSamplers = nullptr;
+    layoutBindings[1].binding = 1;
+    layoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layoutBindings[1].descriptorCount = 1;
+    layoutBindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    layoutBindings[1].pImmutableSamplers = nullptr;
+
+    VulkanDescriptorSetLayout descriptorLayout(ctx, layoutBindings);
 
     VulkanPipelineLayout pipelineLayout = VulkanPipelineLayout(ctx, descriptorLayout);
 
@@ -145,10 +161,13 @@ int main() {
     // -----------------------------------------
     // 8. Uniform buffer
     // -----------------------------------------
-    glm::mat4 model = glm::mat4(1.0f);   // Identity
+    CameraUBO initUBO{};
+    initUBO.model = glm::mat4(1.0f);
+    initUBO.view = glm::mat4(1.0f);
+    initUBO.proj = glm::mat4(1.0f);
     VulkanBuffer cameraUBO = VulkanBuffer(
         ctx,
-        glm::value_ptr(model),
+        &initUBO,
         sizeof(CameraUBO),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
@@ -158,12 +177,26 @@ int main() {
 
     std::cout << "cameraUBO successfully created" << std::endl;
 
+    DirectionalLightUBO initLight{};
+    initLight.direction = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
+    initLight.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
+    VulkanBuffer directionalLightUBO = VulkanBuffer(
+        ctx,
+        &initLight,
+        sizeof(DirectionalLightUBO),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+    );
+
     // -----------------------------------------
     // 9. Descriptor set
     // -----------------------------------------
-    VulkanDescriptorPool descriptorPool = VulkanDescriptorPool(
+    VulkanDescriptorPool descriptorPool(
         ctx,
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        2u * swapchain.imageCount()
     );
 
     std::vector<VulkanDescriptorSet> descriptorSets;
@@ -174,7 +207,8 @@ int main() {
             descriptorPool,
             descriptorLayout
         );
-        descriptorSets.back().writeUniformBuffer(cameraUBO, sizeof(CameraUBO));
+        descriptorSets.back().writeUniformBuffer(cameraUBO, sizeof(CameraUBO), 0);
+        descriptorSets.back().writeUniformBuffer(directionalLightUBO, sizeof(DirectionalLightUBO), 1);
     }
 
     // -----------------------------------------
@@ -212,8 +246,15 @@ int main() {
         proj[1][1] *= -1;
 
         CameraUBO u;
-        u.viewProj = proj * view * model;
+        u.model = model;
+        u.view = view;
+        u.proj = proj;
         cameraUBO.upload(&u, sizeof(u));
+
+        DirectionalLightUBO light{};
+        light.direction = glm::vec4(0.0f, -1.0f, -0.3f, 0.0f);
+        light.color = glm::vec4(1.0f, 1.0f, 0.95f, 0.0f);
+        directionalLightUBO.upload(&light, sizeof(light));
 
         // Acquire frame
         uint32_t imageIndex = frames.beginFrame();

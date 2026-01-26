@@ -10,6 +10,13 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanContext& context, VkD
 	createDescriptorSetLayout();
 }
 
+VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanContext& context, const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+	: mContext(context),
+	  mBindings(bindings)
+{
+	createDescriptorSetLayout(mBindings);
+}
+
 VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout()
 {
 	if (mDescriptorSetLayout) {
@@ -29,6 +36,18 @@ void VulkanDescriptorSetLayout::createDescriptorSetLayout()
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	layoutInfo.bindingCount = 1;
 	layoutInfo.pBindings = &layoutBinding;
+
+	if (vkCreateDescriptorSetLayout(mContext.device(), &layoutInfo, nullptr, &mDescriptorSetLayout) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create descriptor set layout.");
+	}
+}
+
+void VulkanDescriptorSetLayout::createDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+{
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+	layoutInfo.pBindings = bindings.data();
 
 	if (vkCreateDescriptorSetLayout(mContext.device(), &layoutInfo, nullptr, &mDescriptorSetLayout) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create descriptor set layout.");

@@ -20,6 +20,7 @@ public:
 	VkDescriptorSet descriptorSet() const { return mDescriptorSet; }
 
 	void writeUniformBuffer(VulkanBuffer&, VkDeviceSize);
+	void writeUniformBuffer(VulkanBuffer&, VkDeviceSize, uint32_t binding);
 
 private:
 	void allocateDescriptorSet();
