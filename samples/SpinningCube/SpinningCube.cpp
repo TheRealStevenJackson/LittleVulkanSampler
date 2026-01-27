@@ -76,12 +76,8 @@ int main() {
     }
     std::cout << "Successfully loaded " << meshIds.size() << " mesh(es) from " << loadedPath << std::endl;
 
-    // Extract material paths from the MTL file
-    std::vector<MaterialPaths> materialPaths = assetManager.extractMaterialPaths(loadedPath);
-    std::cout << "Extracted " << materialPaths.size() << " material path(s) from MTL" << std::endl;
-
-    // Load materials using StbLoader
-    std::vector<MaterialId> materialIds = assetManager.loadMaterials(materialPaths);
+    // Load materials from the OBJ file's MTL using StbLoader
+    std::vector<MaterialId> materialIds = assetManager.loadMaterials(loadedPath);
     std::cout << "Loaded " << materialIds.size() << " material(s)" << std::endl;
 
     Entity entity;

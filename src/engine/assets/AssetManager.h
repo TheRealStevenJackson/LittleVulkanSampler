@@ -68,17 +68,12 @@ public:
 	const Material* getMaterial(MaterialId id) const;
 
 	/**
-	 * Extract material paths from an OBJ file's MTL.
-	 * Returns a vector of MaterialPaths, one per material found.
-	 */
-	std::vector<MaterialPaths> extractMaterialPaths(const std::string& filepath);
-
-	/**
-	 * Load materials from MaterialPaths using StbLoader.
+	 * Load materials from an OBJ file's MTL using StbLoader.
+	 * Extracts material paths from the OBJ file and loads them.
 	 * Returns a vector of MaterialIds, one per material loaded.
 	 * Returns empty vector on failure.
 	 */
-	std::vector<MaterialId> loadMaterials(const std::vector<MaterialPaths>& paths);
+	std::vector<MaterialId> loadMaterials(const std::string& filepath);
 
 private:
 	MeshId nextMeshId();

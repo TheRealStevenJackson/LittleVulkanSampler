@@ -21,12 +21,13 @@ public:
 	 */
 	std::unique_ptr<Material> loadMaterial(const MaterialPaths& paths);
 
-private:
 	/**
 	 * Load an image file using stb_image and create a VulkanImage.
 	 * Returns nullptr on failure.
 	 */
 	std::unique_ptr<VulkanImage> loadImage(const std::string& filepath);
+
+private:
 
 	VulkanContext& mContext;
 };

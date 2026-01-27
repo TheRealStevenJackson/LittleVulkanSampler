@@ -1,5 +1,7 @@
 #include "engine/assets/AssetManager.h"
 
+#include <iostream>
+
 AssetManager::AssetManager(VulkanContext& context)
 	: mContext(context)
 	, mObjLoader(context)
@@ -72,22 +74,51 @@ const Material* AssetManager::getMaterial(MaterialId id) const {
 	return it != m_materialMap.end() ? it->second.get() : nullptr;
 }
 
-std::vector<MaterialPaths> AssetManager::extractMaterialPaths(const std::string& filepath)
-{
-	return mObjLoader.extractMaterialPaths(filepath);
-}
-
-std::vector<MaterialId> AssetManager::loadMaterials(const std::vector<MaterialPaths>& paths)
+std::vector<MaterialId> AssetManager::loadMaterials(const std::string& filepath)
 {
 	std::vector<MaterialId> materialIds;
 	
+	// Extract material paths from the OBJ file's MTL
+	std::vector<MaterialPaths> paths = mObjLoader.extractMaterialPaths(filepath);
+	
 	for (const auto& path : paths) {
-		auto material = mStbLoader.loadMaterial(path);
-		if (material) {
-			MaterialId id = nextMaterialId();
-			m_materialMap[id] = std::move(material);
-			materialIds.push_back(id);
+		// Create a material for this MaterialPaths
+		auto material = std::make_unique<Material>(mContext, path);
+		
+		// Load and set each texture image if the path is not empty
+		if (!path.albedoPath.empty()) {
+			auto albedoImage = mStbLoader.loadImage(path.albedoPath);
+			if (albedoImage) {
+				material->setAlbedoMap(std::move(albedoImage));
+				std::cout << "Set albedo map: " << path.albedoPath << std::endl;
+			}
 		}
+		if (!path.normalPath.empty()) {
+			auto normalImage = mStbLoader.loadImage(path.normalPath);
+			if (normalImage) {
+				material->setNormalMap(std::move(normalImage));
+				std::cout << "Set normal map: " << path.normalPath << std::endl;
+			}
+		}
+		if (!path.metallicPath.empty()) {
+			auto metallicImage = mStbLoader.loadImage(path.metallicPath);
+			if (metallicImage) {
+				material->setMetallicMap(std::move(metallicImage));
+				std::cout << "Set metallic map: " << path.metallicPath << std::endl;
+			}
+		}
+		if (!path.roughnessPath.empty()) {
+			auto roughnessImage = mStbLoader.loadImage(path.roughnessPath);
+			if (roughnessImage) {
+				material->setRoughnessMap(std::move(roughnessImage));
+				std::cout << "Set roughness map: " << path.roughnessPath << std::endl;
+			}
+		}
+		
+		// Store the material
+		MaterialId id = nextMaterialId();
+		m_materialMap[id] = std::move(material);
+		materialIds.push_back(id);
 	}
 	
 	return materialIds;
