@@ -1,5 +1,6 @@
 #include <platform/Window.h>
 #include <platform/Clock.h>
+#include <core/event/InputManager.h>
 #include <engine/graphics/renderer/VulkanContext.h>
 #include <engine/graphics/renderer/VulkanSwapchain.h>
 #include <engine/graphics/renderer/VulkanRenderPass.h>
@@ -16,6 +17,7 @@
 #include <engine/assets/AssetManager.h>
 #include <engine/graphics/Material.h>
 #include <game/Entity.h>
+#include <engine/input/Controller.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -49,7 +51,11 @@ int main() {
     // 1. Window
     // -----------------------------------------
 
+    core::InputManager inputManager;
     Window window({ "Spinning Cube Sample", 720, 720 });
+    window.setInputReceiver(&inputManager);
+
+    engine::Controller controller(inputManager);
 
     // -----------------------------------------
     // 2. Vulkan context
@@ -348,6 +354,7 @@ int main() {
 
     while (!window.shouldClose()) {
         window.pollEvents();
+        inputManager.update();
 
         clock.tick();
         float dt = clock.deltaTime();

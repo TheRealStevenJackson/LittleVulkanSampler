@@ -9,6 +9,8 @@ target_link_libraries(SpinningCube
 		Assets
 		Renderer
 		Game
+		CoreEvent
+		EngineInput
 )
 
 find_program(GLSLC_EXECUTABLE glslc)
