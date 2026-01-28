@@ -2,6 +2,8 @@
 
 #include <vk_mem_alloc.h>
 #include <stdexcept>
+#include <filesystem>
+#include <iostream>
 
 Material::Material(VulkanContext& context)
     : mContext(context)
@@ -30,6 +32,10 @@ Material::Material(VulkanContext& context)
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
     );
+    
+    // Load default PBR shaders
+    mVertexShader = std::make_unique<VulkanShaderModule>(context, "../../spv/pbr.vert.spv");
+    mFragmentShader = std::make_unique<VulkanShaderModule>(context,   "../../spv/pbr.frag.spv");
 }
 
 Material::Material(VulkanContext& context, const MaterialPaths& paths)

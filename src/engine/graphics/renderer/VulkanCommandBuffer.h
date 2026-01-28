@@ -4,6 +4,7 @@
 #include "engine/graphics/renderer/VulkanFramebuffer.h"
 #include "engine/graphics/renderer/VulkanPipeline.h"
 #include "engine/graphics/renderer/VulkanDescriptorSet.h"
+#include <vector>
 
 class VulkanCommandBuffer {
 public:
@@ -18,6 +19,7 @@ public:
 	void setViewport(VkExtent2D);
 	void setScissor(VkExtent2D);
 	void bindDescriptorSet(VulkanPipelineLayout& pipelineLayout, VulkanDescriptorSet&);
+	void bindDescriptorSets(VulkanPipelineLayout& pipelineLayout, const std::vector<VulkanDescriptorSet*>&);
 	void bindVertexBuffer(VulkanBuffer&);
 	void bindIndexBuffer(VulkanBuffer&);
 	void draw();

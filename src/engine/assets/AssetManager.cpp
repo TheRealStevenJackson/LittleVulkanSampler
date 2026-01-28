@@ -87,32 +87,39 @@ std::vector<MaterialId> AssetManager::loadMaterials(const std::string& filepath)
 		
 		// Load and set each texture image if the path is not empty
 		if (!path.albedoPath.empty()) {
-			auto albedoImage = mStbLoader.loadImage(path.albedoPath);
-			if (albedoImage) {
-				material->setAlbedoMap(std::move(albedoImage));
+			auto loadedImage = mStbLoader.loadImage(path.albedoPath);
+			if (loadedImage.image) {
+				material->setAlbedoMap(std::move(loadedImage.image));
 				std::cout << "Set albedo map: " << path.albedoPath << std::endl;
 			}
 		}
 		if (!path.normalPath.empty()) {
-			auto normalImage = mStbLoader.loadImage(path.normalPath);
-			if (normalImage) {
-				material->setNormalMap(std::move(normalImage));
+			auto loadedImage = mStbLoader.loadImage(path.normalPath);
+			if (loadedImage.image) {
+				material->setNormalMap(std::move(loadedImage.image));
 				std::cout << "Set normal map: " << path.normalPath << std::endl;
 			}
 		}
 		if (!path.metallicPath.empty()) {
-			auto metallicImage = mStbLoader.loadImage(path.metallicPath);
-			if (metallicImage) {
-				material->setMetallicMap(std::move(metallicImage));
+			auto loadedImage = mStbLoader.loadImage(path.metallicPath);
+			if (loadedImage.image) {
+				material->setMetallicMap(std::move(loadedImage.image));
 				std::cout << "Set metallic map: " << path.metallicPath << std::endl;
 			}
 		}
 		if (!path.roughnessPath.empty()) {
-			auto roughnessImage = mStbLoader.loadImage(path.roughnessPath);
-			if (roughnessImage) {
-				material->setRoughnessMap(std::move(roughnessImage));
+			auto loadedImage = mStbLoader.loadImage(path.roughnessPath);
+			if (loadedImage.image) {
+				material->setRoughnessMap(std::move(loadedImage.image));
 				std::cout << "Set roughness map: " << path.roughnessPath << std::endl;
 			}
+		}
+		
+		// Set default AO map as 1x1 white texture (value 1.0)
+		auto aoImage = mStbLoader.createWhiteTexture();
+		if (aoImage) {
+			material->setAoMap(std::move(aoImage));
+			std::cout << "Set AO map: 1x1 white texture (1.0)" << std::endl;
 		}
 		
 		// Store the material

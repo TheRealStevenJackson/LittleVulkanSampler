@@ -3,6 +3,8 @@
 #include "engine/graphics/renderer/VulkanContext.h"
 #include "engine/graphics/renderer/VulkanBuffer.h"
 #include "engine/graphics/renderer/VulkanImage.h"
+#include "engine/graphics/renderer/VulkanShaderModule.h"
+#include "engine/graphics/renderer/VulkanDescriptorSet.h"
 
 #include <memory>
 #include <optional>
@@ -71,6 +73,24 @@ public:
     VulkanBuffer& materialUBO() { return *mMaterialUBO; }
     const VulkanBuffer& materialUBO() const { return *mMaterialUBO; }
     
+    // Descriptor sets for texture images
+    VulkanDescriptorSet* albedoDescriptorSet() const { return mAlbedoDescriptorSet.get(); }
+    VulkanDescriptorSet* normalDescriptorSet() const { return mNormalDescriptorSet.get(); }
+    VulkanDescriptorSet* metallicDescriptorSet() const { return mMetallicDescriptorSet.get(); }
+    VulkanDescriptorSet* roughnessDescriptorSet() const { return mRoughnessDescriptorSet.get(); }
+    VulkanDescriptorSet* aoDescriptorSet() const { return mAoDescriptorSet.get(); }
+    
+    void setAlbedoDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
+    void setNormalDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
+    void setMetallicDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
+    void setRoughnessDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
+    void setAoDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
+    
+    VulkanShaderModule& vertexShader() { return *mVertexShader; }
+    const VulkanShaderModule& vertexShader() const { return *mVertexShader; }
+    VulkanShaderModule& fragmentShader() { return *mFragmentShader; }
+    const VulkanShaderModule& fragmentShader() const { return *mFragmentShader; }
+    
     // Check if textures are being used
     bool hasAlbedoMap() const { return mAlbedoMap != nullptr; }
     bool hasNormalMap() const { return mNormalMap != nullptr; }
@@ -88,9 +108,20 @@ private:
     std::unique_ptr<VulkanImage> mRoughnessMap;
     std::unique_ptr<VulkanImage> mAoMap;
     
+    // Descriptor sets for texture images (optional)
+    std::unique_ptr<VulkanDescriptorSet> mAlbedoDescriptorSet;
+    std::unique_ptr<VulkanDescriptorSet> mNormalDescriptorSet;
+    std::unique_ptr<VulkanDescriptorSet> mMetallicDescriptorSet;
+    std::unique_ptr<VulkanDescriptorSet> mRoughnessDescriptorSet;
+    std::unique_ptr<VulkanDescriptorSet> mAoDescriptorSet;
+    
     // Material properties (used when textures are not set)
     MaterialUBO mMaterialData;
     
     // Material UBO buffer
     std::unique_ptr<VulkanBuffer> mMaterialUBO;
+    
+    // Default shaders
+    std::unique_ptr<VulkanShaderModule> mVertexShader;
+    std::unique_ptr<VulkanShaderModule> mFragmentShader;
 };

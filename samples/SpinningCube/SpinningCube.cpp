@@ -14,6 +14,7 @@
 #include <engine/graphics/renderer/VulkanDescriptorSet.h>
 #include <engine/graphics/renderer/VulkanFrameManager.h>
 #include <engine/assets/AssetManager.h>
+#include <engine/graphics/Material.h>
 #include <game/Entity.h>
 
 #include <glm/glm.hpp>
@@ -28,6 +29,8 @@ struct Vertex {
     glm::vec3 pos;
     glm::vec3 normal;
     glm::vec2 texCoord;
+    glm::vec3 tangent;
+	glm::vec3 bitangent;
 };
 
 struct CameraUBO {
@@ -131,6 +134,7 @@ int main() {
     // -----------------------------------------
     // 6. Pipeline layout + descriptor set layout
     // -----------------------------------------
+    // Set 0: Global uniforms (camera, light)
     std::vector<VkDescriptorSetLayoutBinding> layoutBindings(2);
     layoutBindings[0].binding = 0;
     layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -145,7 +149,49 @@ int main() {
 
     VulkanDescriptorSetLayout descriptorLayout(ctx, layoutBindings);
 
-    VulkanPipelineLayout pipelineLayout = VulkanPipelineLayout(ctx, descriptorLayout);
+    // Set 1: PBR Material textures and UBO
+    std::vector<VkDescriptorSetLayoutBinding> materialLayoutBindings(6);
+    // Albedo map
+    materialLayoutBindings[0].binding = 0;
+    materialLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    materialLayoutBindings[0].descriptorCount = 1;
+    materialLayoutBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    materialLayoutBindings[0].pImmutableSamplers = nullptr;
+    // Normal map
+    materialLayoutBindings[1].binding = 1;
+    materialLayoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    materialLayoutBindings[1].descriptorCount = 1;
+    materialLayoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    materialLayoutBindings[1].pImmutableSamplers = nullptr;
+    // Metallic map
+    materialLayoutBindings[2].binding = 2;
+    materialLayoutBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    materialLayoutBindings[2].descriptorCount = 1;
+    materialLayoutBindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    materialLayoutBindings[2].pImmutableSamplers = nullptr;
+    // Roughness map
+    materialLayoutBindings[3].binding = 3;
+    materialLayoutBindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    materialLayoutBindings[3].descriptorCount = 1;
+    materialLayoutBindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    materialLayoutBindings[3].pImmutableSamplers = nullptr;
+    // AO map
+    materialLayoutBindings[4].binding = 4;
+    materialLayoutBindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    materialLayoutBindings[4].descriptorCount = 1;
+    materialLayoutBindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    materialLayoutBindings[4].pImmutableSamplers = nullptr;
+    // Material UBO
+    materialLayoutBindings[5].binding = 5;
+    materialLayoutBindings[5].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    materialLayoutBindings[5].descriptorCount = 1;
+    materialLayoutBindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    materialLayoutBindings[5].pImmutableSamplers = nullptr;
+
+    VulkanDescriptorSetLayout materialDescriptorLayout(ctx, materialLayoutBindings);
+
+    std::vector<VulkanDescriptorSetLayout*> pipelineLayouts = { &descriptorLayout, &materialDescriptorLayout };
+    VulkanPipelineLayout pipelineLayout = VulkanPipelineLayout(ctx, pipelineLayouts);
 
     // -----------------------------------------
     // 7. Pipeline
@@ -157,10 +203,12 @@ int main() {
         vert,
         frag,
         sizeof(Vertex),
-        3,
+        5,
         { offsetof(Vertex, pos),
           offsetof(Vertex, normal),
-          offsetof(Vertex, texCoord) }
+          offsetof(Vertex, texCoord),
+          offsetof(Vertex, tangent),
+          offsetof(Vertex, bitangent) }
     );
 
     // -----------------------------------------
@@ -216,6 +264,77 @@ int main() {
         descriptorSets.back().writeUniformBuffer(directionalLightUBO, sizeof(DirectionalLightUBO), 1);
     }
 
+    // Create default sampler for textures
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_FALSE;
+    samplerInfo.maxAnisotropy = 1.0f;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+
+    VkSampler defaultSampler = VK_NULL_HANDLE;
+    if (vkCreateSampler(ctx.device(), &samplerInfo, nullptr, &defaultSampler) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create default sampler.");
+    }
+
+    // Create material descriptor pool
+    std::vector<VkDescriptorPoolSize> materialPoolSizes(2);
+    materialPoolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    materialPoolSizes[0].descriptorCount = 5u * swapchain.imageCount(); // 5 textures per material
+    materialPoolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    materialPoolSizes[1].descriptorCount = 1u * swapchain.imageCount(); // 1 UBO per material
+
+    VulkanDescriptorPool materialDescriptorPool(ctx, materialPoolSizes, swapchain.imageCount());
+
+    // Get the first material (assuming we have at least one)
+    Material* material = nullptr;
+    if (!materialIds.empty()) {
+        material = assetManager.getMaterial(materialIds[0]);
+    }
+
+    // Create material descriptor sets
+    std::vector<VulkanDescriptorSet> materialDescriptorSets;
+    materialDescriptorSets.reserve(swapchain.imageCount());
+    for (uint32_t i = 0; i < swapchain.imageCount(); i++) {
+        materialDescriptorSets.emplace_back(
+            ctx,
+            materialDescriptorPool,
+            materialDescriptorLayout
+        );
+
+        if (material) {
+            // Write textures (use default/placeholder if not available)
+            if (material->hasAlbedoMap() && material->albedoMap()) {
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->albedoMap(), defaultSampler, 0);
+            }
+            if (material->hasNormalMap() && material->normalMap()) {
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->normalMap(), defaultSampler, 1);
+            }
+            if (material->hasMetallicMap() && material->metallicMap()) {
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->metallicMap(), defaultSampler, 2);
+            }
+            if (material->hasRoughnessMap() && material->roughnessMap()) {
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->roughnessMap(), defaultSampler, 3);
+            }
+            if (material->hasAoMap() && material->aoMap()) {
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->aoMap(), defaultSampler, 4);
+            }
+            // Write material UBO
+            materialDescriptorSets.back().writeUniformBuffer(material->materialUBO(), sizeof(MaterialUBO), 5);
+        }
+    }
+
     // -----------------------------------------
     // 10. Frame manager (command buffers + sync)
     // -----------------------------------------
@@ -258,7 +377,7 @@ int main() {
 
         DirectionalLightUBO light{};
         light.direction = glm::vec4(0.0f, -1.0f, -0.3f, 0.0f);
-        light.color = glm::vec4(1.0f, 1.0f, 0.95f, 0.0f);
+        light.color = glm::vec4(0.8f, 0.8f, 0.75f, 0.0f); // Reduced brightness from 1.0 to 0.8
         directionalLightUBO.upload(&light, sizeof(light));
 
         // Acquire frame
@@ -274,7 +393,8 @@ int main() {
         cmd.bindPipeline(pipeline);
         cmd.setViewport(swapchain.getExtent());
         cmd.setScissor(swapchain.getExtent());
-        cmd.bindDescriptorSet(pipelineLayout, descriptorSets[imageIndex]);
+        std::vector<VulkanDescriptorSet*> descriptorSetsToBind = { &descriptorSets[imageIndex], &materialDescriptorSets[imageIndex] };
+        cmd.bindDescriptorSets(pipelineLayout, descriptorSetsToBind);
 
         // Use the meshes from the entity's RenderComponent
         for (MeshId meshId : entity.renderComponent().meshIds) {
@@ -296,5 +416,11 @@ int main() {
     }
 
     vkDeviceWaitIdle(ctx.device());
+    
+    // Cleanup sampler
+    if (defaultSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(ctx.device(), defaultSampler, nullptr);
+    }
+    
     return 0;
 }

@@ -7,14 +7,17 @@ class VulkanPipelineLayout {
 public:
 
 	VulkanPipelineLayout(VulkanContext&, VulkanDescriptorSetLayout&);
+	VulkanPipelineLayout(VulkanContext&, const std::vector<VulkanDescriptorSetLayout*>&);
 	~VulkanPipelineLayout();
 
 	VkPipelineLayout pipelineLayout() const { return mPipelineLayout; }
 
 private:
 	void createPipelineLayout();
+	void createPipelineLayout(const std::vector<VulkanDescriptorSetLayout*>&);
 
 	VulkanContext& mContext;
-	VulkanDescriptorSetLayout& mDescriptorSetLayout;
+	VulkanDescriptorSetLayout* mDescriptorSetLayout = nullptr;
+	std::vector<VulkanDescriptorSetLayout*> mDescriptorSetLayouts;
 	VkPipelineLayout mPipelineLayout = VK_NULL_HANDLE;
 };

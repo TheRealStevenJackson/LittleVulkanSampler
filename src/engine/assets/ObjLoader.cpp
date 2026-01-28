@@ -7,11 +7,13 @@
 #include <iostream>
 #include <unordered_map>
 
-// Simple vertex structure with position, normal, and texcoord
+// Simple vertex structure with position, normal, texcoord, tangent, and bitangent
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 normal;
 	glm::vec2 texCoord;
+	glm::vec3 tangent;
+	glm::vec3 bitangent;
 };
 
 ObjLoader::ObjLoader(VulkanContext& context)
@@ -112,11 +114,86 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::loadFromFile(const std::string& fi
 						vertex.texCoord = glm::vec2(0.0f, 0.0f);
 					}
 
+					// Initialize tangent and bitangent to zero (will be calculated later)
+					vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
+					vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
+
 					uint32_t vertexIndex = static_cast<uint32_t>(vertices.size());
 					vertices.push_back(vertex);
 					uniqueVertices[vertexKey] = vertexIndex;
 					indices.push_back(vertexIndex);
 				}
+			}
+		}
+
+		// Calculate tangents and bitangents for each triangle
+		if (!indices.empty() && indices.size() % 3 == 0) {
+			for (size_t i = 0; i < indices.size(); i += 3) {
+				uint32_t i0 = indices[i + 0];
+				uint32_t i1 = indices[i + 1];
+				uint32_t i2 = indices[i + 2];
+
+				Vertex& v0 = vertices[i0];
+				Vertex& v1 = vertices[i1];
+				Vertex& v2 = vertices[i2];
+
+				// Calculate edge vectors
+				glm::vec3 edge1 = v1.pos - v0.pos;
+				glm::vec3 edge2 = v2.pos - v0.pos;
+
+				// Calculate UV deltas
+				glm::vec2 deltaUV1 = v1.texCoord - v0.texCoord;
+				glm::vec2 deltaUV2 = v2.texCoord - v0.texCoord;
+
+				// Calculate tangent and bitangent using the standard formula
+				float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+				
+				// Avoid division by zero (degenerate triangles)
+				if (std::abs(deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y) > 1e-6f) {
+					glm::vec3 tangent;
+					tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+					tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+					tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+					glm::vec3 bitangent;
+					bitangent.x = f * (deltaUV1.x * edge2.x - deltaUV2.x * edge1.x);
+					bitangent.y = f * (deltaUV1.x * edge2.y - deltaUV2.x * edge1.y);
+					bitangent.z = f * (deltaUV1.x * edge2.z - deltaUV2.x * edge1.z);
+
+					// Accumulate tangent and bitangent for all three vertices
+					v0.tangent += tangent;
+					v1.tangent += tangent;
+					v2.tangent += tangent;
+
+					v0.bitangent += bitangent;
+					v1.bitangent += bitangent;
+					v2.bitangent += bitangent;
+				}
+			}
+
+			// Normalize all accumulated tangents and bitangents
+			for (auto& vertex : vertices) {
+				float tangentLength = glm::length(vertex.tangent);
+				if (tangentLength > 1e-6f) {
+					vertex.tangent = glm::normalize(vertex.tangent);
+				} else {
+					// Default tangent if calculation failed (e.g., no UVs or degenerate triangles)
+					vertex.tangent = glm::vec3(1.0f, 0.0f, 0.0f);
+				}
+
+				float bitangentLength = glm::length(vertex.bitangent);
+				if (bitangentLength > 1e-6f) {
+					vertex.bitangent = glm::normalize(vertex.bitangent);
+				} else {
+					// Default bitangent if calculation failed (e.g., no UVs or degenerate triangles)
+					vertex.bitangent = glm::vec3(0.0f, 1.0f, 0.0f);
+				}
+			}
+		} else {
+			// If no indices or invalid index count, set default tangents and bitangents
+			for (auto& vertex : vertices) {
+				vertex.tangent = glm::vec3(1.0f, 0.0f, 0.0f);
+				vertex.bitangent = glm::vec3(0.0f, 1.0f, 0.0f);
 			}
 		}
 

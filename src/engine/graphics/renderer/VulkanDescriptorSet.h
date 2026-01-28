@@ -4,6 +4,7 @@
 #include "engine/graphics/renderer/VulkanDescriptorPool.h"
 #include "engine/graphics/renderer/VulkanDescriptorSetLayout.h"
 #include "engine/graphics/renderer/VulkanBuffer.h"
+#include "engine/graphics/renderer/VulkanImage.h"
 
 class VulkanDescriptorSet {
 public:
@@ -21,6 +22,7 @@ public:
 
 	void writeUniformBuffer(VulkanBuffer&, VkDeviceSize);
 	void writeUniformBuffer(VulkanBuffer&, VkDeviceSize, uint32_t binding);
+	void writeCombinedImageSampler(VulkanImage&, VkSampler, uint32_t binding);
 
 private:
 	void allocateDescriptorSet();
