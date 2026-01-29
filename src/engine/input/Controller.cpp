@@ -13,15 +13,31 @@ Controller::~Controller() {
 }
 
 void Controller::onInputEvent(const platform::InputEvent& ev) {
-	using platform::InputAction;
 	using platform::InputEventType;
+	using platform::GamepadAxis;
+
+	if (ev.type == InputEventType::GamepadAxis) {
+		const int axis = ev.gamepadAxis.axis;
+		const float x = ev.gamepadAxis.valueX;
+		const float y = ev.gamepadAxis.valueY;
+		if (axis == static_cast<int>(GamepadAxis::LeftStickX) || axis == static_cast<int>(GamepadAxis::LeftStickY)) {
+			leftStickX.store(x);
+			leftStickY.store(y);
+		} else if (axis == static_cast<int>(GamepadAxis::RightStickX) || axis == static_cast<int>(GamepadAxis::RightStickY)) {
+			rightStickX.store(x);
+			rightStickY.store(y);
+		}
+		return;
+	}
+
+	using platform::InputAction;
 	const char* actionStr = ev.type == InputEventType::Key
 		? (ev.key.action == InputAction::Release ? "Release" : ev.key.action == InputAction::Press ? "Press" : "Repeat")
 		: (ev.mouseButton.action == InputAction::Release ? "Release" : ev.mouseButton.action == InputAction::Press ? "Press" : "Repeat");
-	if (ev.type == InputEventType::Key)
-		std::cout << "[Controller] KeyEvent key=" << ev.key.key << " action=" << actionStr << " mods=" << ev.key.mods << "\n";
-	else
-		std::cout << "[Controller] MouseButtonEvent button=" << ev.mouseButton.button << " action=" << actionStr << " mods=" << ev.mouseButton.mods << "\n";
+	//if (ev.type == InputEventType::Key)
+	//	std::cout << "[Controller] KeyEvent key=" << ev.key.key << " action=" << actionStr << " mods=" << ev.key.mods << "\n";
+	//else
+	//	std::cout << "[Controller] MouseButtonEvent button=" << ev.mouseButton.button << " action=" << actionStr << " mods=" << ev.mouseButton.mods << "\n";
 }
 
 void Controller::onCursorPosition(double x, double y) {

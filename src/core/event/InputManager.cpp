@@ -10,10 +10,10 @@ void InputManager::onInputEvent(const platform::InputEvent& ev) {
 	const char* actionStr = ev.type == InputEventType::Key
 		? (ev.key.action == InputAction::Release ? "Release" : ev.key.action == InputAction::Press ? "Press" : "Repeat")
 		: (ev.mouseButton.action == InputAction::Release ? "Release" : ev.mouseButton.action == InputAction::Press ? "Press" : "Repeat");
-	if (ev.type == InputEventType::Key)
-		std::cout << "[InputManager] Queuing KeyEvent key=" << ev.key.key << " action=" << actionStr << " mods=" << ev.key.mods << "\n";
-	else
-		std::cout << "[InputManager] Queuing MouseButtonEvent button=" << ev.mouseButton.button << " action=" << actionStr << " mods=" << ev.mouseButton.mods << "\n";
+	//if (ev.type == InputEventType::Key)
+	//	std::cout << "[InputManager] Queuing KeyEvent key=" << ev.key.key << " action=" << actionStr << " mods=" << ev.key.mods << "\n";
+	//else
+	//	std::cout << "[InputManager] Queuing MouseButtonEvent button=" << ev.mouseButton.button << " action=" << actionStr << " mods=" << ev.mouseButton.mods << "\n";
 	queue_.push(ev);
 }
 

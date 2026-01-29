@@ -1,5 +1,6 @@
 #include <platform/Window.h>
 #include <platform/Clock.h>
+#include <platform/GamepadReader.h>
 #include <core/event/InputManager.h>
 #include <engine/graphics/renderer/VulkanContext.h>
 #include <engine/graphics/renderer/VulkanSwapchain.h>
@@ -52,8 +53,11 @@ int main() {
     // -----------------------------------------
 
     core::InputManager inputManager;
-    Window window({ "Spinning Cube Sample", 720, 720 });
+    Window window({ "Spinning Cube Sample", 1440, 1440 });
     window.setInputReceiver(&inputManager);
+
+    GamepadReader gamepadReader;
+    gamepadReader.setInputReceiver(&inputManager);
 
     engine::Controller controller(inputManager);
 
@@ -92,6 +96,7 @@ int main() {
     Entity entity;
     entity.renderComponent().meshIds = meshIds;
     entity.renderComponent().materialIds = materialIds;
+    entity.setController(&controller);
 
     // -----------------------------------------
     // 3. Swapchain + RenderPass
@@ -350,18 +355,17 @@ int main() {
     // Main loop
     // -----------------------------------------
     Clock clock = Clock();
-    float angle = 0.0f;
 
     while (!window.shouldClose()) {
         window.pollEvents();
+        gamepadReader.poll();
         inputManager.update();
 
         clock.tick();
         float dt = clock.deltaTime();
-        angle += dt * 1.0f;
 
-        // Update UBO
-        glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 1, 0));
+        // Update entity (updates model matrix based on controller input)
+        entity.update(dt);
 
         glm::mat4 view = glm::lookAt(
             glm::vec3(0.1, 0.1, 0.1),
@@ -377,7 +381,7 @@ int main() {
         proj[1][1] *= -1;
 
         CameraUBO u;
-        u.model = model;
+        u.model = entity.model();
         u.view = view;
         u.proj = proj;
         cameraUBO.upload(&u, sizeof(u));

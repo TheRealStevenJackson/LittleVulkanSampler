@@ -78,7 +78,7 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 	if (!self || !self->input_receiver_) return;
 
 	const char* actionStr = action == GLFW_RELEASE ? "Release" : action == GLFW_PRESS ? "Press" : "Repeat";
-	std::cout << "[Window] KeyEvent key=" << key << " action=" << actionStr << " mods=" << mods << "\n";
+	//std::cout << "[Window] KeyEvent key=" << key << " action=" << actionStr << " mods=" << mods << "\n";
 
 	platform::InputEvent ev;
 	ev.type = platform::InputEventType::Key;
@@ -93,7 +93,7 @@ void Window::mouseButtonCallback(GLFWwindow* window, int button, int action, int
 	if (!self || !self->input_receiver_) return;
 
 	const char* actionStr = action == GLFW_RELEASE ? "Release" : action == GLFW_PRESS ? "Press" : "Repeat";
-	std::cout << "[Window] MouseButtonEvent button=" << button << " action=" << actionStr << " mods=" << mods << "\n";
+	//std::cout << "[Window] MouseButtonEvent button=" << button << " action=" << actionStr << " mods=" << mods << "\n";
 
 	platform::InputEvent ev;
 	ev.type = platform::InputEventType::MouseButton;
