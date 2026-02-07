@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/graphics/renderer/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
 
 class VulkanRenderPass {
 public:

@@ -1,8 +1,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "engine/assets/StbLoader.h"
 
-#include "engine/graphics/renderer/VulkanImage.h"
-#include "engine/graphics/renderer/VulkanMemory.h"
+#include "platform/graphics/vulkan/VulkanImage.h"
+#include "platform/graphics/vulkan/VulkanMemory.h"
 
 #include <stb_image.h>
 #include <vulkan/vulkan.h>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/graphics/renderer/VulkanContext.h"
-#include "engine/graphics/renderer/VulkanDescriptorSetLayout.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
 
 class VulkanPipelineLayout {
 public:

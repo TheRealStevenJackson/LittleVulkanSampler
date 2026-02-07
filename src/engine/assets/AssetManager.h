@@ -2,7 +2,7 @@
 
 #include "engine/assets/ObjLoader.h"
 #include "engine/assets/StbLoader.h"
-#include "engine/graphics/renderer/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
 #include "src/engine/graphics/Mesh.h"
 #include "src/engine/graphics/Material.h"
 

@@ -1,5 +1,5 @@
-#include "engine/graphics/renderer/VulkanCommandPool.h"
-#include "engine/graphics/renderer/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanCommandPool.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
 
 #include <stdexcept>
 #include <iostream>

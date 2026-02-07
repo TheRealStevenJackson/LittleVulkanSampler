@@ -1,10 +1,10 @@
 #pragma once
 
-#include "engine/graphics/renderer/VulkanContext.h"
-#include "engine/graphics/renderer/VulkanDescriptorPool.h"
-#include "engine/graphics/renderer/VulkanDescriptorSetLayout.h"
-#include "engine/graphics/renderer/VulkanBuffer.h"
-#include "engine/graphics/renderer/VulkanImage.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanDescriptorPool.h"
+#include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
+#include "platform/graphics/vulkan/VulkanBuffer.h"
+#include "platform/graphics/vulkan/VulkanImage.h"
 
 class VulkanDescriptorSet {
 public:

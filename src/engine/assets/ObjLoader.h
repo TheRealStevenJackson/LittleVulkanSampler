@@ -2,7 +2,7 @@
 
 #include "src/engine/graphics/Mesh.h"
 #include "src/engine/graphics/Material.h"
-#include "engine/graphics/renderer/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
 
 #include <string>
 #include <vector>

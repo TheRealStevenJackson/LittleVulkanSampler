@@ -34,4 +34,3 @@ target_link_libraries(VulkanBackend
 		glfw
 		GPUOpen::VulkanMemoryAllocator
 )
-

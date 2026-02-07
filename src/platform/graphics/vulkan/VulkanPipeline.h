@@ -1,9 +1,9 @@
 #pragma once
 
-#include "engine/graphics/renderer/VulkanContext.h"
-#include "engine/graphics/renderer/VulkanRenderPass.h"
-#include "engine/graphics/renderer/VulkanPipelineLayout.h"
-#include "engine/graphics/renderer/VulkanShaderModule.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanRenderPass.h"
+#include "platform/graphics/vulkan/VulkanPipelineLayout.h"
+#include "platform/graphics/vulkan/VulkanShaderModule.h"
 
 class VulkanPipeline {
 public:

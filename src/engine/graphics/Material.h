@@ -1,10 +1,10 @@
 #pragma once
 
-#include "engine/graphics/renderer/VulkanContext.h"
-#include "engine/graphics/renderer/VulkanBuffer.h"
-#include "engine/graphics/renderer/VulkanImage.h"
-#include "engine/graphics/renderer/VulkanShaderModule.h"
-#include "engine/graphics/renderer/VulkanDescriptorSet.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanBuffer.h"
+#include "platform/graphics/vulkan/VulkanImage.h"
+#include "platform/graphics/vulkan/VulkanShaderModule.h"
+#include "platform/graphics/vulkan/VulkanDescriptorSet.h"
 
 #include <memory>
 #include <optional>

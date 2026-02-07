@@ -1,7 +1,7 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
-#include "engine/graphics/renderer/VulkanMemory.h"
+#include "platform/graphics/vulkan/VulkanMemory.h"
 
 #include <stdexcept>
 #include <iostream>

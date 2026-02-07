@@ -1,5 +1,5 @@
-#include "engine/graphics/renderer/VulkanShaderModule.h"
-#include "engine/graphics/renderer/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanShaderModule.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
 
 #include <fstream>
 #include <stdexcept>

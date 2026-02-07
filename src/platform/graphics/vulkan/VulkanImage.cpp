@@ -1,4 +1,4 @@
-#include "engine/graphics/renderer/VulkanImage.h"
+#include "platform/graphics/vulkan/VulkanImage.h"
 
 #include <vk_mem_alloc.h>
 

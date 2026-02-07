@@ -1,9 +1,9 @@
 #pragma once
 
-#include "engine/graphics/renderer/VulkanContext.h"
-#include "engine/graphics/renderer/VulkanCommandPool.h"
-#include "engine/graphics/renderer/VulkanCommandBuffer.h"
-#include "engine/graphics/renderer/VulkanSwapchain.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanCommandPool.h"
+#include "platform/graphics/vulkan/VulkanCommandBuffer.h"
+#include "platform/graphics/vulkan/VulkanSwapchain.h"
 
 class VulkanFrameManager {
 public:

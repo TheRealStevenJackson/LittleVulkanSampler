@@ -1,8 +1,8 @@
 #pragma once
 
 #include "src/engine/graphics/Material.h"
-#include "engine/graphics/renderer/VulkanContext.h"
-#include "engine/graphics/renderer/VulkanImage.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanImage.h"
 
 #include <memory>
 #include <string>

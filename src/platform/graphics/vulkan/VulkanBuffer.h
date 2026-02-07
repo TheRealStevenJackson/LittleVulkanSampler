@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/graphics/renderer/VulkanContext.h"
-#include "engine/graphics/renderer/VulkanMemory.h"
+#include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanMemory.h"
 
 #include <vulkan/vulkan.h>
 #include <cstdint>

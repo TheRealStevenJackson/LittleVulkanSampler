@@ -1,9 +1,9 @@
  #pragma once
 
-#include "engine/graphics/renderer/VulkanRenderPass.h"
-#include "engine/graphics/renderer/VulkanFramebuffer.h"
-#include "engine/graphics/renderer/VulkanPipeline.h"
-#include "engine/graphics/renderer/VulkanDescriptorSet.h"
+#include "platform/graphics/vulkan/VulkanRenderPass.h"
+#include "platform/graphics/vulkan/VulkanFramebuffer.h"
+#include "platform/graphics/vulkan/VulkanPipeline.h"
+#include "platform/graphics/vulkan/VulkanDescriptorSet.h"
 #include <vector>
 
 class VulkanCommandBuffer {
