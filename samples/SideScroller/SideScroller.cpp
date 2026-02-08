@@ -14,6 +14,7 @@
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
 #include <core/asset/loader/MeshLoader.h>
+#include <core/asset/loader/ShaderLoader.h>
 #include <core/asset/types/Mesh.h>
 
 #include <glm/glm.hpp>
@@ -120,8 +121,10 @@ int main() {
     // -----------------------------------------
     // 5. Load shaders
     // -----------------------------------------
-    VulkanShaderModule vert = VulkanShaderModule(ctx, "spv/side_scroller.vert.spv");
-    VulkanShaderModule frag = VulkanShaderModule(ctx, "spv/side_scroller.frag.spv");
+    std::vector<char> vertCode = ShaderLoader::readFile("spv/side_scroller.vert.spv");
+    std::vector<char> fragCode = ShaderLoader::readFile("spv/side_scroller.frag.spv");
+    VulkanShaderModule vert = VulkanShaderModule(ctx, vertCode);
+    VulkanShaderModule frag = VulkanShaderModule(ctx, fragCode);
 
     // -----------------------------------------
     // 6. Pipeline layout + descriptor set layout

@@ -1,15 +1,12 @@
 #include "platform/graphics/vulkan/VulkanShaderModule.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 
-#include <fstream>
 #include <stdexcept>
 #include <iostream>
 
-VulkanShaderModule::VulkanShaderModule(const VulkanContext& context, const std::string& filepath)
+VulkanShaderModule::VulkanShaderModule(const VulkanContext& context, const std::vector<char>& code)
 	: context_(context) {
-	auto code = readFile(filepath);
 	module_ = createShaderModule(code);
-
 	std::cout << "Created shader module." << std::endl;
 }
 
@@ -17,25 +14,7 @@ VulkanShaderModule::~VulkanShaderModule() {
 	if (module_ != VK_NULL_HANDLE) {
 		vkDestroyShaderModule(context_.device(), module_, nullptr);
 	}
-
 	std::cout << "Destroyed shader module." << std::endl;
-}
-
-std::vector<char> VulkanShaderModule::readFile(const std::string& filepath) {
-	std::ifstream file(filepath, std::ios::ate | std::ios::binary);
-
-	if (!file.is_open()) {
-		throw std::runtime_error("Failed to open shader file: " + filepath);
-	}
-
-	size_t filesize = static_cast<size_t>(file.tellg());
-	std::vector<char> buffer(filesize);
-
-	file.seekg(0);
-	file.read(buffer.data(), filesize);
-	file.close();
-
-	return buffer;
 }
 
 VkShaderModule VulkanShaderModule::createShaderModule(const std::vector<char>& code) {

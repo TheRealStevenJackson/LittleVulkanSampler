@@ -6,6 +6,7 @@ AssetManager::AssetManager(VulkanContext& context)
 	: mContext(context)
 	, mMeshLoader(context)
 	, mMaterialLoader(context)
+	, mShaderLoader(context)
 {
 }
 
@@ -15,6 +16,10 @@ MeshId AssetManager::nextMeshId() {
 
 MaterialId AssetManager::nextMaterialId() {
 	return m_nextMaterialId++;
+}
+
+ShaderId AssetManager::nextShaderId() {
+	return m_nextShaderId++;
 }
 
 std::vector<MeshId> AssetManager::loadObj(const std::string& filepath) {
@@ -72,6 +77,25 @@ Material* AssetManager::getMaterial(MaterialId id) {
 const Material* AssetManager::getMaterial(MaterialId id) const {
 	auto it = m_materialMap.find(id);
 	return it != m_materialMap.end() ? it->second.get() : nullptr;
+}
+
+Shader* AssetManager::getShader(ShaderId id) {
+	auto it = m_shaderMap.find(id);
+	return it != m_shaderMap.end() ? it->second.get() : nullptr;
+}
+
+const Shader* AssetManager::getShader(ShaderId id) const {
+	auto it = m_shaderMap.find(id);
+	return it != m_shaderMap.end() ? it->second.get() : nullptr;
+}
+
+ShaderId AssetManager::loadShader(const std::string& filepath) {
+	auto shader = mShaderLoader.loadShader(filepath);
+	if (!shader)
+		return InvalidShaderId;
+	ShaderId id = nextShaderId();
+	m_shaderMap[id] = std::move(shader);
+	return id;
 }
 
 std::vector<MaterialId> AssetManager::loadMaterials(const std::string& filepath)

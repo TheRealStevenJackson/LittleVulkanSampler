@@ -16,6 +16,7 @@
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
 #include <core/asset/AssetManager.h>
+#include <core/asset/loader/ShaderLoader.h>
 #include <core/asset/types/Material.h>
 #include <game/Entity.h>
 #include <engine/input/Controller.h>
@@ -139,8 +140,8 @@ int main() {
     // -----------------------------------------
     // 5. Load shaders
     // -----------------------------------------
-    VulkanShaderModule vert = VulkanShaderModule(ctx, "spv/spinning_cube.vert.spv");
-    VulkanShaderModule frag = VulkanShaderModule(ctx, "spv/spinning_cube.frag.spv");
+    ShaderId vertShaderId = assetManager.loadShader("spv/spinning_cube.vert.spv");
+    ShaderId fragShaderId = assetManager.loadShader("spv/spinning_cube.frag.spv");
 
     // -----------------------------------------
     // 6. Pipeline layout + descriptor set layout
@@ -211,8 +212,8 @@ int main() {
         ctx,
         renderPass,
         pipelineLayout,
-        vert,
-        frag,
+        *assetManager.getShader(vertShaderId)->module(),
+        *assetManager.getShader(fragShaderId)->module(),
         sizeof(Vertex),
         5,
         { offsetof(Vertex, pos),

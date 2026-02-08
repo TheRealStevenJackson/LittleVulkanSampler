@@ -2,8 +2,10 @@
 
 #include "core/asset/loader/MeshLoader.h"
 #include "core/asset/loader/MaterialLoader.h"
+#include "core/asset/loader/ShaderLoader.h"
 #include "core/asset/types/Mesh.h"
 #include "core/asset/types/Material.h"
+#include "core/asset/types/Shader.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 
 #include <cstdint>
@@ -17,6 +19,9 @@ static constexpr MeshId InvalidMeshId = 0;
 
 using MaterialId = uint32_t;
 static constexpr MaterialId InvalidMaterialId = 0;
+
+using ShaderId = uint32_t;
+static constexpr ShaderId InvalidShaderId = 0;
 
 /**
  * AssetManager handles loading of .obj files that include .mtl (material) files.
@@ -68,6 +73,17 @@ public:
 	const Material* getMaterial(MaterialId id) const;
 
 	/**
+	 * Get shader by ID. Returns nullptr if ID is invalid or not found.
+	 */
+	Shader* getShader(ShaderId id);
+	const Shader* getShader(ShaderId id) const;
+
+	/**
+	 * Load a shader from file. Returns InvalidShaderId on failure.
+	 */
+	ShaderId loadShader(const std::string& filepath);
+
+	/**
 	 * Load materials from an OBJ file's MTL using MaterialLoader.
 	 * Extracts material paths from the OBJ file and loads them.
 	 * Returns a vector of MaterialIds, one per material loaded.
@@ -78,12 +94,16 @@ public:
 private:
 	MeshId nextMeshId();
 	MaterialId nextMaterialId();
+	ShaderId nextShaderId();
 
 	VulkanContext& mContext;
 	MeshLoader mMeshLoader;
 	MaterialLoader mMaterialLoader;
+	ShaderLoader mShaderLoader;
 	std::unordered_map<MeshId, std::unique_ptr<Mesh>> m_meshMap;
 	std::unordered_map<MaterialId, std::unique_ptr<Material>> m_materialMap;
+	std::unordered_map<ShaderId, std::unique_ptr<Shader>> m_shaderMap;
 	MeshId m_nextMeshId{ 1 };
 	MaterialId m_nextMaterialId{ 1 };
+	ShaderId m_nextShaderId{ 1 };
 };

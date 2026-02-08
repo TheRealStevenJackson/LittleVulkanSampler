@@ -1,4 +1,5 @@
 #include "core/asset/types/Material.h"
+#include "core/asset/loader/ShaderLoader.h"
 
 #include <vk_mem_alloc.h>
 #include <stdexcept>
@@ -34,8 +35,10 @@ Material::Material(VulkanContext& context)
     );
     
     // Load default PBR shaders
-    mVertexShader = std::make_unique<VulkanShaderModule>(context, "../../spv/pbr.vert.spv");
-    mFragmentShader = std::make_unique<VulkanShaderModule>(context,   "../../spv/pbr.frag.spv");
+    std::vector<char> vertCode = ShaderLoader::readFile("../../spv/pbr.vert.spv");
+    std::vector<char> fragCode = ShaderLoader::readFile("../../spv/pbr.frag.spv");
+    mVertexShader = std::make_unique<VulkanShaderModule>(context, vertCode);
+    mFragmentShader = std::make_unique<VulkanShaderModule>(context, fragCode);
 }
 
 Material::Material(VulkanContext& context, const MaterialPaths& paths)
