@@ -4,6 +4,7 @@ add_library(Assets STATIC
 	types/Texture.cpp
 	loader/MeshLoader.cpp
 	loader/ImageLoader.cpp
+	loader/MaterialLoader.cpp
 	AssetManager.cpp
 )
 

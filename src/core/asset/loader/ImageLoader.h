@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/asset/types/Material.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanImage.h"
 
@@ -69,12 +68,6 @@ public:
 	// Non-copyable
 	ImageLoader(const ImageLoader&) = delete;
 	ImageLoader& operator=(const ImageLoader&) = delete;
-
-	/**
-	 * Load textures from MaterialPaths and create a Material.
-	 * Returns nullptr on failure.
-	 */
-	std::unique_ptr<Material> loadMaterial(const MaterialPaths& paths);
 
 	/**
 	 * Load an image file using stb_image and create a VulkanImage with ImageView and Sampler.

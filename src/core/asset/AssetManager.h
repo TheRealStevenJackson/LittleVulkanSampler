@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/asset/loader/MeshLoader.h"
-#include "core/asset/loader/ImageLoader.h"
+#include "core/asset/loader/MaterialLoader.h"
 #include "core/asset/types/Mesh.h"
 #include "core/asset/types/Material.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
@@ -68,7 +68,7 @@ public:
 	const Material* getMaterial(MaterialId id) const;
 
 	/**
-	 * Load materials from an OBJ file's MTL using ImageLoader.
+	 * Load materials from an OBJ file's MTL using MaterialLoader.
 	 * Extracts material paths from the OBJ file and loads them.
 	 * Returns a vector of MaterialIds, one per material loaded.
 	 * Returns empty vector on failure.
@@ -81,7 +81,7 @@ private:
 
 	VulkanContext& mContext;
 	MeshLoader mMeshLoader;
-	ImageLoader mImageLoader;
+	MaterialLoader mMaterialLoader;
 	std::unordered_map<MeshId, std::unique_ptr<Mesh>> m_meshMap;
 	std::unordered_map<MaterialId, std::unique_ptr<Material>> m_materialMap;
 	MeshId m_nextMeshId{ 1 };
