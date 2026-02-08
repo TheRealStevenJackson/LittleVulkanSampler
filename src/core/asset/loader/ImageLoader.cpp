@@ -1,6 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "core/asset/loader/ImageLoader.h"
 
+#include "core/asset/types/Texture.h"
 #include "platform/graphics/vulkan/VulkanImage.h"
 #include "platform/graphics/vulkan/VulkanMemory.h"
 
@@ -22,19 +23,19 @@ std::unique_ptr<Material> ImageLoader::loadMaterial(const MaterialPaths& paths)
 
 	if (!paths.albedoPath.empty()) {
 		auto loadedImage = loadImage(paths.albedoPath);
-		if (loadedImage.image) material->setAlbedoMap(std::move(loadedImage.image));
+		if (loadedImage.image) material->setAlbedoMap(std::make_unique<Texture>(mContext, std::move(loadedImage.image), paths.albedoPath));
 	}
 	if (!paths.normalPath.empty()) {
 		auto loadedImage = loadImage(paths.normalPath);
-		if (loadedImage.image) material->setNormalMap(std::move(loadedImage.image));
+		if (loadedImage.image) material->setNormalMap(std::make_unique<Texture>(mContext, std::move(loadedImage.image), paths.normalPath));
 	}
 	if (!paths.metallicPath.empty()) {
 		auto loadedImage = loadImage(paths.metallicPath);
-		if (loadedImage.image) material->setMetallicMap(std::move(loadedImage.image));
+		if (loadedImage.image) material->setMetallicMap(std::make_unique<Texture>(mContext, std::move(loadedImage.image), paths.metallicPath));
 	}
 	if (!paths.roughnessPath.empty()) {
 		auto loadedImage = loadImage(paths.roughnessPath);
-		if (loadedImage.image) material->setRoughnessMap(std::move(loadedImage.image));
+		if (loadedImage.image) material->setRoughnessMap(std::make_unique<Texture>(mContext, std::move(loadedImage.image), paths.roughnessPath));
 	}
 
 	return material;

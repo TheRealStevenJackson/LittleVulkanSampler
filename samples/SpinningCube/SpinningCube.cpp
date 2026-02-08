@@ -327,19 +327,19 @@ int main() {
         if (material) {
             // Write textures (use default/placeholder if not available)
             if (material->hasAlbedoMap() && material->albedoMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->albedoMap(), defaultSampler, 0);
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->albedoMap()->image(), defaultSampler, 0);
             }
             if (material->hasNormalMap() && material->normalMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->normalMap(), defaultSampler, 1);
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->normalMap()->image(), defaultSampler, 1);
             }
             if (material->hasMetallicMap() && material->metallicMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->metallicMap(), defaultSampler, 2);
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->metallicMap()->image(), defaultSampler, 2);
             }
             if (material->hasRoughnessMap() && material->roughnessMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->roughnessMap(), defaultSampler, 3);
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->roughnessMap()->image(), defaultSampler, 3);
             }
             if (material->hasAoMap() && material->aoMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->aoMap(), defaultSampler, 4);
+                materialDescriptorSets.back().writeCombinedImageSampler(*material->aoMap()->image(), defaultSampler, 4);
             }
             // Write material UBO
             materialDescriptorSets.back().writeUniformBuffer(material->materialUBO(), sizeof(MaterialUBO), 5);

@@ -1,6 +1,7 @@
 add_library(Assets STATIC
 	types/Mesh.cpp
 	types/Material.cpp
+	types/Texture.cpp
 	loader/MeshLoader.cpp
 	loader/ImageLoader.cpp
 	AssetManager.cpp

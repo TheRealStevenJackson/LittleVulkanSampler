@@ -1,8 +1,8 @@
 #pragma once
 
+#include "core/asset/types/Texture.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanBuffer.h"
-#include "platform/graphics/vulkan/VulkanImage.h"
 #include "platform/graphics/vulkan/VulkanShaderModule.h"
 #include "platform/graphics/vulkan/VulkanDescriptorSet.h"
 
@@ -48,11 +48,11 @@ public:
     ~Material() = default;
     
     // Set texture maps (optional - if not set, uses uniform values)
-    void setAlbedoMap(std::unique_ptr<VulkanImage> image);
-    void setNormalMap(std::unique_ptr<VulkanImage> image);
-    void setMetallicMap(std::unique_ptr<VulkanImage> image);
-    void setRoughnessMap(std::unique_ptr<VulkanImage> image);
-    void setAoMap(std::unique_ptr<VulkanImage> image);
+    void setAlbedoMap(std::unique_ptr<Texture> texture);
+    void setNormalMap(std::unique_ptr<Texture> texture);
+    void setMetallicMap(std::unique_ptr<Texture> texture);
+    void setRoughnessMap(std::unique_ptr<Texture> texture);
+    void setAoMap(std::unique_ptr<Texture> texture);
     
     // Set material properties (used when textures are not available)
     void setAlbedo(float r, float g, float b, float a = 1.0f);
@@ -64,11 +64,11 @@ public:
     void updateUBO();
     
     // Getters
-    VulkanImage* albedoMap() const { return mAlbedoMap.get(); }
-    VulkanImage* normalMap() const { return mNormalMap.get(); }
-    VulkanImage* metallicMap() const { return mMetallicMap.get(); }
-    VulkanImage* roughnessMap() const { return mRoughnessMap.get(); }
-    VulkanImage* aoMap() const { return mAoMap.get(); }
+    Texture* albedoMap() const { return mAlbedoMap.get(); }
+    Texture* normalMap() const { return mNormalMap.get(); }
+    Texture* metallicMap() const { return mMetallicMap.get(); }
+    Texture* roughnessMap() const { return mRoughnessMap.get(); }
+    Texture* aoMap() const { return mAoMap.get(); }
     
     VulkanBuffer& materialUBO() { return *mMaterialUBO; }
     const VulkanBuffer& materialUBO() const { return *mMaterialUBO; }
@@ -102,11 +102,11 @@ private:
     VulkanContext& mContext;
     
     // Texture maps (optional)
-    std::unique_ptr<VulkanImage> mAlbedoMap;
-    std::unique_ptr<VulkanImage> mNormalMap;
-    std::unique_ptr<VulkanImage> mMetallicMap;
-    std::unique_ptr<VulkanImage> mRoughnessMap;
-    std::unique_ptr<VulkanImage> mAoMap;
+    std::unique_ptr<Texture> mAlbedoMap;
+    std::unique_ptr<Texture> mNormalMap;
+    std::unique_ptr<Texture> mMetallicMap;
+    std::unique_ptr<Texture> mRoughnessMap;
+    std::unique_ptr<Texture> mAoMap;
     
     // Descriptor sets for texture images (optional)
     std::unique_ptr<VulkanDescriptorSet> mAlbedoDescriptorSet;

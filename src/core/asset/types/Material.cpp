@@ -47,37 +47,37 @@ Material::Material(VulkanContext& context, const MaterialPaths& paths)
     // textures can be loaded and set via setAlbedoMap(), setNormalMap(), etc.
 }
 
-void Material::setAlbedoMap(std::unique_ptr<VulkanImage> image)
+void Material::setAlbedoMap(std::unique_ptr<Texture> texture)
 {
-    mAlbedoMap = std::move(image);
+    mAlbedoMap = std::move(texture);
     mMaterialData.useAlbedoMap = mAlbedoMap != nullptr ? 1 : 0;
     updateUBO();
 }
 
-void Material::setNormalMap(std::unique_ptr<VulkanImage> image)
+void Material::setNormalMap(std::unique_ptr<Texture> texture)
 {
-    mNormalMap = std::move(image);
+    mNormalMap = std::move(texture);
     mMaterialData.useNormalMap = mNormalMap != nullptr ? 1 : 0;
     updateUBO();
 }
 
-void Material::setMetallicMap(std::unique_ptr<VulkanImage> image)
+void Material::setMetallicMap(std::unique_ptr<Texture> texture)
 {
-    mMetallicMap = std::move(image);
+    mMetallicMap = std::move(texture);
     mMaterialData.useMetallicMap = mMetallicMap != nullptr ? 1 : 0;
     updateUBO();
 }
 
-void Material::setRoughnessMap(std::unique_ptr<VulkanImage> image)
+void Material::setRoughnessMap(std::unique_ptr<Texture> texture)
 {
-    mRoughnessMap = std::move(image);
+    mRoughnessMap = std::move(texture);
     mMaterialData.useRoughnessMap = mRoughnessMap != nullptr ? 1 : 0;
     updateUBO();
 }
 
-void Material::setAoMap(std::unique_ptr<VulkanImage> image)
+void Material::setAoMap(std::unique_ptr<Texture> texture)
 {
-    mAoMap = std::move(image);
+    mAoMap = std::move(texture);
     mMaterialData.useAoMap = mAoMap != nullptr ? 1 : 0;
     updateUBO();
 }
