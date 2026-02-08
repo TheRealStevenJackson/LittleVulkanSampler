@@ -14,7 +14,7 @@
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
 #include <core/asset/ObjLoader.h>
-#include <engine/graphics/Mesh.h>
+#include <core/asset/Mesh.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

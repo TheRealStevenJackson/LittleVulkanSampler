@@ -2,9 +2,9 @@
 
 #include "core/asset/ObjLoader.h"
 #include "core/asset/StbLoader.h"
+#include "core/asset/Mesh.h"
+#include "core/asset/Material.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
-#include "src/engine/graphics/Mesh.h"
-#include "src/engine/graphics/Material.h"
 
 #include <cstdint>
 #include <memory>

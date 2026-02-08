@@ -16,7 +16,7 @@
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
 #include <core/asset/AssetManager.h>
-#include <engine/graphics/Material.h>
+#include <core/asset/Material.h>
 #include <game/Entity.h>
 #include <engine/input/Controller.h>
 

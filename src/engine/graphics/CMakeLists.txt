@@ -1,14 +1,4 @@
-add_library(Renderer STATIC
-	Mesh.cpp
-	Material.cpp
-)
-
-target_include_directories(Renderer
-	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/../../..
-)
-
-target_link_libraries(Renderer
-	PUBLIC
-		VulkanBackend
-)
+# Mesh and Material moved to src/core/asset. Renderer is an interface
+# so existing target_link_libraries(Renderer) still get Mesh/Material via Assets.
+add_library(Renderer INTERFACE)
+target_link_libraries(Renderer INTERFACE Assets)

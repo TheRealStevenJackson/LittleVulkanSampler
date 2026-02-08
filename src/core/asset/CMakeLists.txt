@@ -1,4 +1,6 @@
 add_library(Assets STATIC
+	Mesh.cpp
+	Material.cpp
 	ObjLoader.cpp
 	AssetManager.cpp
 	StbLoader.cpp
@@ -18,6 +20,6 @@ target_include_directories(Assets
 
 target_link_libraries(Assets
 	PUBLIC
-		Renderer
+		VulkanBackend
 		tinyobjloader
 )

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/engine/graphics/Material.h"
+#include "core/asset/Material.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanImage.h"
 
