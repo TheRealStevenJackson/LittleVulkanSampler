@@ -1,9 +1,9 @@
 add_library(Assets STATIC
-	Mesh.cpp
-	Material.cpp
-	ObjLoader.cpp
+	types/Mesh.cpp
+	types/Material.cpp
+	loader/MeshLoader.cpp
+	loader/ImageLoader.cpp
 	AssetManager.cpp
-	StbLoader.cpp
 )
 
 target_include_directories(Assets

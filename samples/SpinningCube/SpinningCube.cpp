@@ -16,7 +16,7 @@
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
 #include <core/asset/AssetManager.h>
-#include <core/asset/Material.h>
+#include <core/asset/types/Material.h>
 #include <game/Entity.h>
 #include <engine/input/Controller.h>
 
@@ -89,7 +89,7 @@ int main() {
     }
     std::cout << "Successfully loaded " << meshIds.size() << " mesh(es) from " << loadedPath << std::endl;
 
-    // Load materials from the OBJ file's MTL using StbLoader
+    // Load materials from the OBJ file's MTL using ImageLoader
     std::vector<MaterialId> materialIds = assetManager.loadMaterials(loadedPath);
     std::cout << "Loaded " << materialIds.size() << " material(s)" << std::endl;
 

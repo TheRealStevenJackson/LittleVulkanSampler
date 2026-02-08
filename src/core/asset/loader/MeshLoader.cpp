@@ -1,5 +1,5 @@
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "core/asset/ObjLoader.h"
+#include "core/asset/loader/MeshLoader.h"
 #include "tiny_obj_loader.h"
 
 #include <glm/glm.hpp>
@@ -16,14 +16,14 @@ struct Vertex {
 	glm::vec3 bitangent;
 };
 
-ObjLoader::ObjLoader(VulkanContext& context)
+MeshLoader::MeshLoader(VulkanContext& context)
 	: mContext(context)
 {
 }
 
-ObjLoader::~ObjLoader() = default;
+MeshLoader::~MeshLoader() = default;
 
-std::vector<std::unique_ptr<Mesh>> ObjLoader::loadFromFile(const std::string& filepath) {
+std::vector<std::unique_ptr<Mesh>> MeshLoader::loadFromFile(const std::string& filepath) {
 	std::vector<std::unique_ptr<Mesh>> meshes;
 
 	tinyobj::attrib_t attrib;
@@ -228,7 +228,7 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::loadFromFile(const std::string& fi
 	return meshes;
 }
 
-std::unique_ptr<Mesh> ObjLoader::loadFromFileCombined(const std::string& filepath) {
+std::unique_ptr<Mesh> MeshLoader::loadFromFileCombined(const std::string& filepath) {
 	auto meshes = loadFromFile(filepath);
 	
 	if (meshes.empty()) {
@@ -247,7 +247,7 @@ std::unique_ptr<Mesh> ObjLoader::loadFromFileCombined(const std::string& filepat
 	return std::move(meshes[0]);
 }
 
-std::vector<MaterialPaths> ObjLoader::extractMaterialPaths(const std::string& filepath) {
+std::vector<MaterialPaths> MeshLoader::extractMaterialPaths(const std::string& filepath) {
 	std::vector<MaterialPaths> materialPaths;
 
 	tinyobj::attrib_t attrib;

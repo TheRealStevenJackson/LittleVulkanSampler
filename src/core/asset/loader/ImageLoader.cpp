@@ -1,5 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include "core/asset/StbLoader.h"
+#include "core/asset/loader/ImageLoader.h"
 
 #include "platform/graphics/vulkan/VulkanImage.h"
 #include "platform/graphics/vulkan/VulkanMemory.h"
@@ -11,12 +11,12 @@
 #include <iostream>
 #include <stdexcept>
 
-StbLoader::StbLoader(VulkanContext& context)
+ImageLoader::ImageLoader(VulkanContext& context)
 	: mContext(context)
 {
 }
 
-std::unique_ptr<Material> StbLoader::loadMaterial(const MaterialPaths& paths)
+std::unique_ptr<Material> ImageLoader::loadMaterial(const MaterialPaths& paths)
 {
 	auto material = std::make_unique<Material>(mContext, paths);
 
@@ -40,7 +40,7 @@ std::unique_ptr<Material> StbLoader::loadMaterial(const MaterialPaths& paths)
 	return material;
 }
 
-VkSampler StbLoader::createSampler(VulkanContext& context)
+VkSampler ImageLoader::createSampler(VulkanContext& context)
 {
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -74,7 +74,7 @@ VkSampler StbLoader::createSampler(VulkanContext& context)
 	return sampler;
 }
 
-LoadedImage StbLoader::loadImage(const std::string& filepath)
+LoadedImage ImageLoader::loadImage(const std::string& filepath)
 {
 	LoadedImage result;
 	
@@ -230,7 +230,7 @@ LoadedImage StbLoader::loadImage(const std::string& filepath)
 	return result;
 }
 
-std::unique_ptr<VulkanImage> StbLoader::createWhiteTexture()
+std::unique_ptr<VulkanImage> ImageLoader::createWhiteTexture()
 {
 	// Create a 1x1 white texture (RGBA = 1.0, 1.0, 1.0, 1.0)
 	const VkExtent2D extent{ 1, 1 };

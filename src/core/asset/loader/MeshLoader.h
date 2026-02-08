@@ -1,17 +1,17 @@
 #pragma once
 
-#include "core/asset/Mesh.h"
-#include "core/asset/Material.h"
+#include "core/asset/types/Mesh.h"
+#include "core/asset/types/Material.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 
 #include <string>
 #include <vector>
 #include <memory>
 
-class ObjLoader {
+class MeshLoader {
 public:
-	ObjLoader(VulkanContext& context);
-	~ObjLoader();
+	MeshLoader(VulkanContext& context);
+	~MeshLoader();
 
 	// Load an OBJ file and return a vector of meshes (one per shape in the OBJ)
 	// Returns empty vector on failure

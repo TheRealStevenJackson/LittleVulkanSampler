@@ -1,4 +1,4 @@
-#include "core/asset/Material.h"
+#include "core/asset/types/Material.h"
 
 #include <vk_mem_alloc.h>
 #include <stdexcept>

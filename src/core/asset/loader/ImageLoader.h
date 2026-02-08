@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/asset/Material.h"
+#include "core/asset/types/Material.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanImage.h"
 
@@ -61,14 +61,14 @@ struct LoadedImage {
 	}
 };
 
-class StbLoader {
+class ImageLoader {
 public:
-	explicit StbLoader(VulkanContext& context);
-	~StbLoader() = default;
+	explicit ImageLoader(VulkanContext& context);
+	~ImageLoader() = default;
 
 	// Non-copyable
-	StbLoader(const StbLoader&) = delete;
-	StbLoader& operator=(const StbLoader&) = delete;
+	ImageLoader(const ImageLoader&) = delete;
+	ImageLoader& operator=(const ImageLoader&) = delete;
 
 	/**
 	 * Load textures from MaterialPaths and create a Material.

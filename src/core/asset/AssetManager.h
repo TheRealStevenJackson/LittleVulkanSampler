@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/asset/ObjLoader.h"
-#include "core/asset/StbLoader.h"
-#include "core/asset/Mesh.h"
-#include "core/asset/Material.h"
+#include "core/asset/loader/MeshLoader.h"
+#include "core/asset/loader/ImageLoader.h"
+#include "core/asset/types/Mesh.h"
+#include "core/asset/types/Material.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 
 #include <cstdint>
@@ -20,7 +20,7 @@ static constexpr MaterialId InvalidMaterialId = 0;
 
 /**
  * AssetManager handles loading of .obj files that include .mtl (material) files.
- * OBJ and MTL are loaded via ObjLoader; MTL base path is resolved from the OBJ
+ * OBJ and MTL are loaded via MeshLoader; MTL base path is resolved from the OBJ
  * directory so referenced materials and textures are found correctly.
  * Meshes are stored internally; only meshIDs are handed out. Use getMesh() to
  * access a mesh by ID for rendering.
@@ -68,7 +68,7 @@ public:
 	const Material* getMaterial(MaterialId id) const;
 
 	/**
-	 * Load materials from an OBJ file's MTL using StbLoader.
+	 * Load materials from an OBJ file's MTL using ImageLoader.
 	 * Extracts material paths from the OBJ file and loads them.
 	 * Returns a vector of MaterialIds, one per material loaded.
 	 * Returns empty vector on failure.
@@ -80,8 +80,8 @@ private:
 	MaterialId nextMaterialId();
 
 	VulkanContext& mContext;
-	ObjLoader mObjLoader;
-	StbLoader mStbLoader;
+	MeshLoader mMeshLoader;
+	ImageLoader mImageLoader;
 	std::unordered_map<MeshId, std::unique_ptr<Mesh>> m_meshMap;
 	std::unordered_map<MaterialId, std::unique_ptr<Material>> m_materialMap;
 	MeshId m_nextMeshId{ 1 };

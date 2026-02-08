@@ -13,8 +13,8 @@
 #include <platform/graphics/vulkan/VulkanDescriptorPool.h>
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
-#include <core/asset/ObjLoader.h>
-#include <core/asset/Mesh.h>
+#include <core/asset/loader/MeshLoader.h>
+#include <core/asset/types/Mesh.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -48,7 +48,7 @@ int main() {
     // -----------------------------------------
     // 2.5. Object loader
     // -----------------------------------------
-    ObjLoader objLoader(ctx);
+    MeshLoader meshLoader(ctx);
     
     // Load mesh from resources directory - try multiple paths
     std::vector<std::string> pathsToTry = {
@@ -60,7 +60,7 @@ int main() {
     std::vector<std::unique_ptr<Mesh>> meshes;
     std::string loadedPath;
     for (const auto& path : pathsToTry) {
-        meshes = objLoader.loadFromFile(path);
+        meshes = meshLoader.loadFromFile(path);
         if (!meshes.empty()) {
             loadedPath = path;
             break;

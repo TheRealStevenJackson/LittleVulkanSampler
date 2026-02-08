@@ -1,4 +1,4 @@
-#include "core/asset/Mesh.h"
+#include "core/asset/types/Mesh.h"
 
 Mesh::Mesh(VulkanContext& context,
 		   const void* vertexData,
