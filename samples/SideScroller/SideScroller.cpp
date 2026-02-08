@@ -13,7 +13,7 @@
 #include <platform/graphics/vulkan/VulkanDescriptorPool.h>
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
-#include <engine/assets/ObjLoader.h>
+#include <core/asset/ObjLoader.h>
 #include <engine/graphics/Mesh.h>
 
 #include <glm/glm.hpp>

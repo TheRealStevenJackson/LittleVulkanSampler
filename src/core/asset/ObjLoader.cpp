@@ -1,5 +1,5 @@
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "engine/assets/ObjLoader.h"
+#include "core/asset/ObjLoader.h"
 #include "tiny_obj_loader.h"
 
 #include <glm/glm.hpp>
