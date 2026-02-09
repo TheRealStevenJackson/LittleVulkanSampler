@@ -8,6 +8,9 @@ bin-int/
 external/tinygltf/
 external/tinyobjloader/
 
+# Resources
+resources/
+
 # CMake
 CMakeCache.txt
 CMakeFiles/

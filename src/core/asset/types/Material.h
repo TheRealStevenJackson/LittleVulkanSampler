@@ -73,18 +73,9 @@ public:
     VulkanBuffer& materialUBO() { return *mMaterialUBO; }
     const VulkanBuffer& materialUBO() const { return *mMaterialUBO; }
     
-    // Descriptor sets for texture images
-    VulkanDescriptorSet* albedoDescriptorSet() const { return mAlbedoDescriptorSet.get(); }
-    VulkanDescriptorSet* normalDescriptorSet() const { return mNormalDescriptorSet.get(); }
-    VulkanDescriptorSet* metallicDescriptorSet() const { return mMetallicDescriptorSet.get(); }
-    VulkanDescriptorSet* roughnessDescriptorSet() const { return mRoughnessDescriptorSet.get(); }
-    VulkanDescriptorSet* aoDescriptorSet() const { return mAoDescriptorSet.get(); }
-    
-    void setAlbedoDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
-    void setNormalDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
-    void setMetallicDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
-    void setRoughnessDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
-    void setAoDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
+    // Single descriptor set for material (UBO + texture samplers)
+    VulkanDescriptorSet* descriptorSet() const { return mDescriptorSet.get(); }
+    void setDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet);
     
     VulkanShaderModule& vertexShader() { return *mVertexShader; }
     const VulkanShaderModule& vertexShader() const { return *mVertexShader; }
@@ -108,12 +99,8 @@ private:
     std::unique_ptr<Texture> mRoughnessMap;
     std::unique_ptr<Texture> mAoMap;
     
-    // Descriptor sets for texture images (optional)
-    std::unique_ptr<VulkanDescriptorSet> mAlbedoDescriptorSet;
-    std::unique_ptr<VulkanDescriptorSet> mNormalDescriptorSet;
-    std::unique_ptr<VulkanDescriptorSet> mMetallicDescriptorSet;
-    std::unique_ptr<VulkanDescriptorSet> mRoughnessDescriptorSet;
-    std::unique_ptr<VulkanDescriptorSet> mAoDescriptorSet;
+    // Single descriptor set for material (optional)
+    std::unique_ptr<VulkanDescriptorSet> mDescriptorSet;
     
     // Material properties (used when textures are not set)
     MaterialUBO mMaterialData;

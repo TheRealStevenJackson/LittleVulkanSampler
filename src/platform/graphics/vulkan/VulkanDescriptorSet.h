@@ -13,8 +13,8 @@ public:
 	VulkanDescriptorSet(const VulkanDescriptorSet&) = delete;
 	VulkanDescriptorSet& operator=(const VulkanDescriptorSet&) = delete;
 
-	VulkanDescriptorSet(VulkanDescriptorSet&&) noexcept = default;
-	VulkanDescriptorSet& operator=(VulkanDescriptorSet&&) noexcept = default;
+	VulkanDescriptorSet(VulkanDescriptorSet&& other) noexcept;
+	VulkanDescriptorSet& operator=(VulkanDescriptorSet&& other) noexcept;
 
 	~VulkanDescriptorSet();
 

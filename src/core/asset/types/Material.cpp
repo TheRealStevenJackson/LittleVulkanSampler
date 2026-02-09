@@ -112,6 +112,11 @@ void Material::setAo(float ao)
     updateUBO();
 }
 
+void Material::setDescriptorSet(std::unique_ptr<VulkanDescriptorSet> descriptorSet)
+{
+    mDescriptorSet = std::move(descriptorSet);
+}
+
 void Material::updateUBO()
 {
     mMaterialUBO->upload(&mMaterialData, sizeof(MaterialUBO));

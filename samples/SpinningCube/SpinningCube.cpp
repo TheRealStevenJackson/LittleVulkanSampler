@@ -254,6 +254,8 @@ int main() {
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
     );
+    
+    std::cout << "lightUBO successfully created" << std::endl;
 
     // -----------------------------------------
     // 9. Descriptor set
@@ -276,75 +278,17 @@ int main() {
         descriptorSets.back().writeUniformBuffer(directionalLightUBO, sizeof(DirectionalLightUBO), 1);
     }
 
-    // Create default sampler for textures
-    VkSamplerCreateInfo samplerInfo{};
-    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_FALSE;
-    samplerInfo.maxAnisotropy = 1.0f;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo.mipLodBias = 0.0f;
-    samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = 0.0f;
+    std::cout << "camera and light descriptor sets successfully created" << std::endl;
 
-    VkSampler defaultSampler = VK_NULL_HANDLE;
-    if (vkCreateSampler(ctx.device(), &samplerInfo, nullptr, &defaultSampler) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create default sampler.");
-    }
+    // Create material descriptor pool, default sampler, and descriptor set per material (owned by AssetManager / Material)
+    assetManager.updateMaterialDescriptorSets(materialDescriptorLayout);
 
-    // Create material descriptor pool
-    std::vector<VkDescriptorPoolSize> materialPoolSizes(2);
-    materialPoolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    materialPoolSizes[0].descriptorCount = 5u * swapchain.imageCount(); // 5 textures per material
-    materialPoolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    materialPoolSizes[1].descriptorCount = 1u * swapchain.imageCount(); // 1 UBO per material
-
-    VulkanDescriptorPool materialDescriptorPool(ctx, materialPoolSizes, swapchain.imageCount());
+    std::cout << "material descriptor pool and sets created" << std::endl;
 
     // Get the first material (assuming we have at least one)
     Material* material = nullptr;
     if (!materialIds.empty()) {
         material = assetManager.getMaterial(materialIds[0]);
-    }
-
-    // Create material descriptor sets
-    std::vector<VulkanDescriptorSet> materialDescriptorSets;
-    materialDescriptorSets.reserve(swapchain.imageCount());
-    for (uint32_t i = 0; i < swapchain.imageCount(); i++) {
-        materialDescriptorSets.emplace_back(
-            ctx,
-            materialDescriptorPool,
-            materialDescriptorLayout
-        );
-
-        if (material) {
-            // Write textures (use default/placeholder if not available)
-            if (material->hasAlbedoMap() && material->albedoMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->albedoMap()->image(), defaultSampler, 0);
-            }
-            if (material->hasNormalMap() && material->normalMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->normalMap()->image(), defaultSampler, 1);
-            }
-            if (material->hasMetallicMap() && material->metallicMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->metallicMap()->image(), defaultSampler, 2);
-            }
-            if (material->hasRoughnessMap() && material->roughnessMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->roughnessMap()->image(), defaultSampler, 3);
-            }
-            if (material->hasAoMap() && material->aoMap()) {
-                materialDescriptorSets.back().writeCombinedImageSampler(*material->aoMap()->image(), defaultSampler, 4);
-            }
-            // Write material UBO
-            materialDescriptorSets.back().writeUniformBuffer(material->materialUBO(), sizeof(MaterialUBO), 5);
-        }
     }
 
     // -----------------------------------------
@@ -405,8 +349,10 @@ int main() {
         cmd.bindPipeline(pipeline);
         cmd.setViewport(swapchain.getExtent());
         cmd.setScissor(swapchain.getExtent());
-        std::vector<VulkanDescriptorSet*> descriptorSetsToBind = { &descriptorSets[imageIndex], &materialDescriptorSets[imageIndex] };
-        cmd.bindDescriptorSets(pipelineLayout, descriptorSetsToBind);
+        if (material && material->descriptorSet()) {
+            std::vector<VulkanDescriptorSet*> descriptorSetsToBind = { &descriptorSets[imageIndex], material->descriptorSet() };
+            cmd.bindDescriptorSets(pipelineLayout, descriptorSetsToBind);
+        }
 
         // Use the meshes from the entity's RenderComponent
         for (MeshId meshId : entity.renderComponent().meshIds) {
@@ -428,11 +374,6 @@ int main() {
     }
 
     vkDeviceWaitIdle(ctx.device());
-    
-    // Cleanup sampler
-    if (defaultSampler != VK_NULL_HANDLE) {
-        vkDestroySampler(ctx.device(), defaultSampler, nullptr);
-    }
-    
+
     return 0;
 }

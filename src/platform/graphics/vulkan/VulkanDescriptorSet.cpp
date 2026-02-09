@@ -10,6 +10,27 @@ VulkanDescriptorSet::VulkanDescriptorSet(VulkanContext& context, VulkanDescripto
 	allocateDescriptorSet();
 }
 
+VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet&& other) noexcept
+	: mContext(other.mContext)
+	, mDescriptorPool(other.mDescriptorPool)
+	, mDescriptorSetLayout(other.mDescriptorSetLayout)
+	, mDescriptorSet(other.mDescriptorSet)
+{
+	other.mDescriptorSet = VK_NULL_HANDLE;
+}
+
+VulkanDescriptorSet& VulkanDescriptorSet::operator=(VulkanDescriptorSet&& other) noexcept
+{
+	if (this != &other) {
+		if (mDescriptorSet) {
+			vkFreeDescriptorSets(mContext.device(), mDescriptorPool.descriptorPool(), 1, &mDescriptorSet);
+		}
+		mDescriptorSet = other.mDescriptorSet;
+		other.mDescriptorSet = VK_NULL_HANDLE;
+	}
+	return *this;
+}
+
 VulkanDescriptorSet::~VulkanDescriptorSet()
 {
 	if (mDescriptorSet) {

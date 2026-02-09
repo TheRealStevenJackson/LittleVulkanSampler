@@ -7,6 +7,8 @@
 #include "core/asset/types/Material.h"
 #include "core/asset/types/Shader.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
+#include "platform/graphics/vulkan/VulkanDescriptorPool.h"
+#include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
 
 #include <cstdint>
 #include <memory>
@@ -33,7 +35,7 @@ static constexpr ShaderId InvalidShaderId = 0;
 class AssetManager {
 public:
 	explicit AssetManager(VulkanContext& context);
-	~AssetManager() = default;
+	~AssetManager();
 
 	// Non-copyable
 	AssetManager(const AssetManager&) = delete;
@@ -59,6 +61,20 @@ public:
 	bool loadObjFromPaths(const std::vector<std::string>& pathsToTry,
 		std::vector<MeshId>& outMeshIds,
 		std::string& outLoadedPath);
+
+	/** Returns the Vulkan context (e.g. for creating meshes/materials from glTF in SceneLoader). */
+	VulkanContext& context() { return mContext; }
+	const VulkanContext& context() const { return mContext; }
+
+	/**
+	 * Register an externally-created mesh (e.g. from glTF). Returns the new MeshId.
+	 */
+	MeshId addMesh(std::unique_ptr<Mesh> mesh);
+
+	/**
+	 * Register an externally-created material (e.g. default material for glTF). Returns the new MaterialId.
+	 */
+	MaterialId addMaterial(std::unique_ptr<Material> material);
 
 	/**
 	 * Get mesh by ID for rendering. Returns nullptr if ID is invalid or not found.
@@ -91,6 +107,19 @@ public:
 	 */
 	std::vector<MaterialId> loadMaterials(const std::string& filepath);
 
+	/**
+	 * Create and own a default sampler, descriptor pool for material descriptor sets (5 image samplers + 1 UBO per set),
+	 * then allocate and write one descriptor set per material.
+	 * Pool size is based on the number of materials in m_materialMap.
+	 */
+	void updateMaterialDescriptorSets(VulkanDescriptorSetLayout& materialDescriptorLayout);
+
+	/**
+	 * Get the material descriptor pool. Valid after updateMaterialDescriptorSets() has been called.
+	 */
+	VulkanDescriptorPool* materialDescriptorPool() { return m_materialDescriptorPool.get(); }
+	const VulkanDescriptorPool* materialDescriptorPool() const { return m_materialDescriptorPool.get(); }
+
 private:
 	MeshId nextMeshId();
 	MaterialId nextMaterialId();
@@ -106,4 +135,6 @@ private:
 	MeshId m_nextMeshId{ 1 };
 	MaterialId m_nextMaterialId{ 1 };
 	ShaderId m_nextShaderId{ 1 };
+	std::unique_ptr<VulkanDescriptorPool> m_materialDescriptorPool;
+	VkSampler m_defaultSampler = VK_NULL_HANDLE;
 };
