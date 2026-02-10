@@ -13,6 +13,7 @@
 
 class VulkanContext;
 class AssetManager;
+namespace core { class Renderer; }
 class VulkanSwapchain;
 class VulkanRenderPass;
 class VulkanFramebuffer;
@@ -61,6 +62,12 @@ public:
 	SceneManager& sceneManager() { return m_sceneManager; }
 	const SceneManager& sceneManager() const { return m_sceneManager; }
 
+	/**
+	 * Load a single entity from OBJ paths (tries paths in order) and update material descriptor sets for the engine's renderer.
+	 * \return true if loading succeeded, false if all paths failed.
+	 */
+	bool loadEntityTemporary(const std::vector<std::string>& pathsToTry);
+
 	/** Call each frame to pump gamepad state into the input manager. */
 	void pollGamepads() { m_gamepadReader.poll(); }
 
@@ -85,8 +92,13 @@ public:
 	};
 
 	/**
-	 * Perform one frame: update loaded entity, upload UBOs, acquire image, record and submit commands.
+	 * Perform one frame using the engine's renderer: update loaded entity, upload UBOs, acquire image, record and submit commands.
 	 * Uses sceneManager().loadedEntity() and assetManager() for entity and materials.
+	 */
+	void renderFrame(float dt);
+
+	/**
+	 * Same as renderFrame(dt) but with explicit params (e.g. when using a custom renderer).
 	 */
 	void renderFrame(float dt, const RenderFrameParams& params);
 
@@ -104,6 +116,7 @@ private:
 	std::unique_ptr<VulkanContext> m_context;
 	std::unique_ptr<AssetManager> m_assetManager;
 	SceneManager m_sceneManager;
+	std::unique_ptr<core::Renderer> m_renderer;
 };
 
 } // namespace engine

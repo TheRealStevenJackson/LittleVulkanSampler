@@ -4,6 +4,7 @@
 #include "engine/scene/SceneResource.h"
 #include "core/asset/AssetManager.h"
 #include "engine/input/Controller.h"
+#include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
 
 #include <optional>
 #include <string>
@@ -56,10 +57,12 @@ public:
 	/**
 	 * Temporary: load a single entity from OBJ paths (tries paths, loads mesh + materials, creates Entity with controller).
 	 * Stores the entity in the manager; use loadedEntity() to access it.
+	 * If materialDescriptorLayout is non-null, updates material descriptor sets after loading (for rendering).
 	 * \return true if loading succeeded, false if all paths failed.
 	 */
 	bool loadEntityTemporary(const std::vector<std::string>& pathsToTry,
-		engine::Controller* controller);
+		engine::Controller* controller,
+		VulkanDescriptorSetLayout* materialDescriptorLayout = nullptr);
 
 	/** Temporary: get the entity loaded by loadEntityTemporary. Returns nullptr if none loaded. */
 	Entity* loadedEntity() { return m_loadedEntity.has_value() ? &*m_loadedEntity : nullptr; }

@@ -88,7 +88,8 @@ void SceneManager::unloadScene(const std::string& sceneName) {
 }
 
 bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTry,
-	engine::Controller* controller)
+	engine::Controller* controller,
+	VulkanDescriptorSetLayout* materialDescriptorLayout)
 {
 	std::vector<MeshId> meshIds;
 	std::string loadedPath;
@@ -102,5 +103,9 @@ bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTr
 	entity.renderComponent().materialIds = std::move(materialIds);
 	entity.setController(controller);
 	m_loadedEntity = std::move(entity);
+
+	if (materialDescriptorLayout)
+		m_assetManager->updateMaterialDescriptorSets(*materialDescriptorLayout);
+
 	return true;
 }

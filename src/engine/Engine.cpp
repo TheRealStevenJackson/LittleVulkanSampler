@@ -1,4 +1,5 @@
 #include "engine/Engine.h"
+#include <core/renderer/Renderer.h>
 #include <platform/graphics/vulkan/VulkanContext.h>
 #include <platform/graphics/vulkan/VulkanSwapchain.h>
 #include <platform/graphics/vulkan/VulkanRenderPass.h>
@@ -31,6 +32,7 @@ Engine::Engine(const WindowDesc& desc)
 {
 	m_window.setInputReceiver(&m_inputManager);
 	m_gamepadReader.setInputReceiver(&m_inputManager);
+	m_renderer = std::make_unique<core::Renderer>(*m_context, m_window, *m_assetManager);
 }
 
 Engine::~Engine() = default;
@@ -84,6 +86,10 @@ struct DirectionalLightUBO {
 };
 
 } // namespace
+
+void Engine::renderFrame(float dt) {
+	renderFrame(dt, m_renderer->getRenderFrameParams());
+}
 
 void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	if (!params.swapchain || !params.renderPass || !params.framebuffers || !params.pipeline ||
@@ -158,6 +164,11 @@ void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	cmd.endRenderPass();
 
 	params.frames->endFrame(cmd.getHandle(), imageIndex);
+}
+
+bool Engine::loadEntityTemporary(const std::vector<std::string>& pathsToTry) {
+	return m_sceneManager.loadEntityTemporary(pathsToTry, &m_controller,
+		m_renderer ? m_renderer->getMaterialDescriptorLayout() : nullptr);
 }
 
 } // namespace engine
