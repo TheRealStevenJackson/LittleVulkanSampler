@@ -4,6 +4,7 @@ add_executable(SpinningCube
 
 target_link_libraries(SpinningCube
 	PRIVATE
+		Engine
 		Platform
 		VulkanBackend
 		Assets
@@ -11,6 +12,7 @@ target_link_libraries(SpinningCube
 		Game
 		CoreEvent
 		EngineInput
+		EngineScene
 )
 
 find_program(GLSLC_EXECUTABLE glslc)

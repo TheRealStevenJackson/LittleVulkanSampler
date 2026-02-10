@@ -1,3 +1,7 @@
+add_subdirectory(input)
+add_subdirectory(scene)
+add_subdirectory(graphics)
+
 add_library(Engine STATIC
 	Engine.cpp
 )

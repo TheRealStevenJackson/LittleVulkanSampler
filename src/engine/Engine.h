@@ -2,6 +2,7 @@
 
 #include <core/event/InputManager.h>
 #include <engine/input/Controller.h>
+#include <engine/scene/SceneManager.h>
 #include <platform/Window.h>
 #include <platform/GamepadReader.h>
 
@@ -9,7 +10,6 @@
 
 class VulkanContext;
 class AssetManager;
-class SceneManager;
 
 namespace engine {
 

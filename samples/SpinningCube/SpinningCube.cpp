@@ -1,7 +1,5 @@
-#include <platform/Window.h>
+#include <engine/Engine.h>
 #include <platform/Clock.h>
-#include <platform/GamepadReader.h>
-#include <core/event/InputManager.h>
 #include <platform/graphics/vulkan/VulkanContext.h>
 #include <platform/graphics/vulkan/VulkanSwapchain.h>
 #include <platform/graphics/vulkan/VulkanRenderPass.h>
@@ -16,10 +14,8 @@
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
 #include <core/asset/AssetManager.h>
-#include <core/asset/loader/ShaderLoader.h>
 #include <core/asset/types/Material.h>
 #include <game/Entity.h>
-#include <engine/input/Controller.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -50,28 +46,11 @@ struct DirectionalLightUBO {
 
 int main() {
     // -----------------------------------------
-    // 1. Window
+    // 1. Engine (window, input, Vulkan context, assets, scene)
     // -----------------------------------------
-
-    core::InputManager inputManager;
-    Window window({ "Spinning Cube Sample", 1440, 1440 });
-    window.setInputReceiver(&inputManager);
-
-    GamepadReader gamepadReader;
-    gamepadReader.setInputReceiver(&inputManager);
-
-    engine::Controller controller(inputManager);
-
-    // -----------------------------------------
-    // 2. Vulkan context
-    // -----------------------------------------
-    VulkanContext ctx(window.getHandle());
-
-    // -----------------------------------------
-    // 2.5. Asset manager (OBJ + MTL loading)
-    // -----------------------------------------
-    //TODO: Move to SceneLoader
-    AssetManager assetManager(ctx);
+    engine::Engine engine({ "Spinning Cube Sample", 1440, 1440 });
+    VulkanContext& ctx = engine.context();
+    AssetManager& assetManager = engine.assetManager();
 
     std::vector<std::string> pathsToTry = {
         "resources/meshes/nes-controller/controller_wireless_1024.obj",  // Relative to executable
@@ -97,12 +76,12 @@ int main() {
     Entity entity;
     entity.renderComponent().meshIds = meshIds;
     entity.renderComponent().materialIds = materialIds;
-    entity.setController(&controller);
+    entity.setController(&engine.controller());
 
     // -----------------------------------------
     // 3. Swapchain + RenderPass
     // -----------------------------------------
-    VulkanSwapchain swapchain(ctx, window.getHandle());
+    VulkanSwapchain swapchain(ctx, engine.window().getHandle());
 
     // TODO: Move depth image and view to swapchain
     std::vector<VulkanImage> depthImages;
@@ -301,10 +280,10 @@ int main() {
     // -----------------------------------------
     Clock clock = Clock();
 
-    while (!window.shouldClose()) {
-        window.pollEvents();
-        gamepadReader.poll();
-        inputManager.update();
+    while (!engine.shouldClose()) {
+        engine.pollEvents();
+        engine.pollGamepads();
+        engine.inputManager().update();
 
         clock.tick();
         float dt = clock.deltaTime();
