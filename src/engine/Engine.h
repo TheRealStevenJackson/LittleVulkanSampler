@@ -7,7 +7,6 @@
 #include <platform/GamepadReader.h>
 #include <platform/Clock.h>
 
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -73,10 +72,10 @@ public:
 
 	/**
 	 * Run the main loop until the window requests close.
-	 * Each frame: polls events, updates input, ticks the engine clock, then invokes onFrame(dt).
+	 * Each frame: polls events, updates input, ticks the engine clock, then calls renderFrame(dt).
 	 * Call vkDeviceWaitIdle after the loop so the GPU is idle when run() returns.
 	 */
-	void run(std::function<void(float)> onFrame);
+	void run();
 
 	/** Parameters for renderFrame(). Pass pointers to swapchain, pipeline, etc. owned by the sample. */
 	struct RenderFrameParams {

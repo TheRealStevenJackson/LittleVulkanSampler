@@ -102,10 +102,16 @@ bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTr
 	entity.renderComponent().meshIds = std::move(meshIds);
 	entity.renderComponent().materialIds = std::move(materialIds);
 	entity.setController(controller);
-	m_loadedEntity = std::move(entity);
+	m_loadedEntities.clear();
+	m_loadedEntities.push_back(std::move(entity));
 
 	if (materialDescriptorLayout)
 		m_assetManager->updateMaterialDescriptorSets(*materialDescriptorLayout);
 
 	return true;
+}
+
+void SceneManager::update(float dt) {
+	for (Entity& entity : m_loadedEntities)
+		entity.update(dt);
 }

@@ -64,9 +64,12 @@ public:
 		engine::Controller* controller,
 		VulkanDescriptorSetLayout* materialDescriptorLayout = nullptr);
 
-	/** Temporary: get the entity loaded by loadEntityTemporary. Returns nullptr if none loaded. */
-	Entity* loadedEntity() { return m_loadedEntity.has_value() ? &*m_loadedEntity : nullptr; }
-	const Entity* loadedEntity() const { return m_loadedEntity.has_value() ? &*m_loadedEntity : nullptr; }
+	/** Temporary: get the first entity loaded by loadEntityTemporary. Returns nullptr if none loaded. */
+	Entity* loadedEntity() { return m_loadedEntities.empty() ? nullptr : &m_loadedEntities.front(); }
+	const Entity* loadedEntity() const { return m_loadedEntities.empty() ? nullptr : &m_loadedEntities.front(); }
+
+	/** Update all loaded entities with the given delta time. */
+	void update(float dt);
 
 	SceneLoader& loader() { return m_loader; }
 	const SceneLoader& loader() const { return m_loader; }
@@ -76,5 +79,5 @@ private:
 	SceneLoader m_loader;
 	std::unordered_map<std::string, SceneResource> m_scenes;
 	SceneResource* m_currentScene = nullptr;
-	std::optional<Entity> m_loadedEntity;
+	std::vector<Entity> m_loadedEntities;
 };

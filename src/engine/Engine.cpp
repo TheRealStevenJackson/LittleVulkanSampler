@@ -61,13 +61,13 @@ const AssetManager& Engine::assetManager() const {
 	return *m_assetManager;
 }
 
-void Engine::run(std::function<void(float)> onFrame) {
+void Engine::run() {
 	while (!shouldClose()) {
 		pollEvents();
 		pollGamepads();
 		m_inputManager.update();
 		m_clock.tick();
-		onFrame(static_cast<float>(m_clock.deltaTime()));
+		renderFrame(static_cast<float>(m_clock.deltaTime()));
 	}
 	vkDeviceWaitIdle(context().device());
 }
@@ -97,11 +97,11 @@ void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	    !params.directionalLightUBO || !params.frames)
 		return;
 
+	sceneManager().update(dt);
+
 	Entity* entity = sceneManager().loadedEntity();
 	if (!entity)
 		return;
-
-	entity->update(dt);
 
 	glm::mat4 view = glm::lookAt(
 		glm::vec3(0.1f, 0.1f, 0.1f),

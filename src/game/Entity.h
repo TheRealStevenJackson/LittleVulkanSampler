@@ -34,7 +34,7 @@ public:
 	const glm::mat4& model() const { return m_model; }
 
 	void update(float dt) {
-		const float rotationSpeedScale = 2.0f;
+		const float rotationSpeedScale = 1.0f;
 		if (m_controller) {
 			// LeftStickX -> rotation around Y axis (yaw)
 			// LeftStickY -> rotation around X axis (pitch)

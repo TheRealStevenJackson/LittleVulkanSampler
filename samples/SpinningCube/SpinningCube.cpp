@@ -22,9 +22,7 @@ int main() {
     }
     const Entity* entity = engine.sceneManager().loadedEntity();
 
-    engine.run([&](float dt) {
-        engine.renderFrame(dt);
-    });
+    engine.run();
 
     return 0;
 }

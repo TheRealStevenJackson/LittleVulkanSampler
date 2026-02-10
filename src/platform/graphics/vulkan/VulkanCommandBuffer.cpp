@@ -31,7 +31,7 @@ void VulkanCommandBuffer::beginRenderPass(VulkanRenderPass& renderPass, VulkanFr
 	renderArea.offset = { 0, 0 };
 
 	std::array<VkClearValue, 2> clearValues{};
-	clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+	clearValues[0].color = {{0.26f, 0.31f, 0.40f, 1.0f}};
 	clearValues[1].depthStencil = { 1.0f, 0 };
 
 	VkRenderPassBeginInfo beginInfo{};

@@ -20,7 +20,7 @@ private:
 	static constexpr int GAMEPAD_BUTTON_COUNT = 15;
 	static constexpr int GAMEPAD_AXIS_COUNT = 6;
 	/** Minimum raw change to emit an axis event. */
-	static constexpr float AXIS_CHANGE_THRESHOLD = 0.01f;
+	static constexpr float AXIS_CHANGE_THRESHOLD = 0.001f;
 	/** Raw values in [-DEADZONE, DEADZONE] are output as 0; remainder is rescaled to [-1, 1]. */
 	static constexpr float AXIS_DEADZONE = 0.15f;
 
