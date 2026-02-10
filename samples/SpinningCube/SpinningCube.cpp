@@ -1,5 +1,4 @@
 #include <engine/Engine.h>
-#include <platform/Clock.h>
 #include <platform/graphics/vulkan/VulkanContext.h>
 #include <platform/graphics/vulkan/VulkanSwapchain.h>
 #include <platform/graphics/vulkan/VulkanRenderPass.h>
@@ -58,25 +57,16 @@ int main() {
         "../../../resources/meshes/nes-controller/controller_wireless_1024.obj"  // Relative from deeper build subdirectory
     };
 
-    std::vector<MeshId> meshIds;
-    std::string loadedPath;
-    if (!assetManager.loadObjFromPaths(pathsToTry, meshIds, loadedPath)) {
+    if (!engine.sceneManager().loadEntityTemporary(pathsToTry, &engine.controller())) {
         std::cerr << "Failed to load mesh. Tried paths:" << std::endl;
         for (const auto& path : pathsToTry) {
             std::cerr << "  - " << path << std::endl;
         }
         return -1;
     }
-    std::cout << "Successfully loaded " << meshIds.size() << " mesh(es) from " << loadedPath << std::endl;
-
-    // Load materials from the OBJ file's MTL using ImageLoader
-    std::vector<MaterialId> materialIds = assetManager.loadMaterials(loadedPath);
-    std::cout << "Loaded " << materialIds.size() << " material(s)" << std::endl;
-
-    Entity entity;
-    entity.renderComponent().meshIds = meshIds;
-    entity.renderComponent().materialIds = materialIds;
-    entity.setController(&engine.controller());
+    const Entity* entity = engine.sceneManager().loadedEntity();
+    std::cout << "Successfully loaded " << entity->renderComponent().meshIds.size() << " mesh(es)" << std::endl;
+    std::cout << "Loaded " << entity->renderComponent().materialIds.size() << " material(s)" << std::endl;
 
     // -----------------------------------------
     // 3. Swapchain + RenderPass
@@ -264,95 +254,28 @@ int main() {
 
     std::cout << "material descriptor pool and sets created" << std::endl;
 
-    // Get the first material (assuming we have at least one)
-    Material* material = nullptr;
-    if (!materialIds.empty()) {
-        material = assetManager.getMaterial(materialIds[0]);
-    }
-
     // -----------------------------------------
     // 10. Frame manager (command buffers + sync)
     // -----------------------------------------
     VulkanFrameManager frames(ctx, swapchain.imageCount(), swapchain);
 
     // -----------------------------------------
-    // Main loop
+    // Main loop (owned by Engine)
     // -----------------------------------------
-    Clock clock = Clock();
+    engine::Engine::RenderFrameParams frameParams;
+    frameParams.swapchain = &swapchain;
+    frameParams.renderPass = &renderPass;
+    frameParams.framebuffers = &framebuffers;
+    frameParams.pipeline = &pipeline;
+    frameParams.pipelineLayout = &pipelineLayout;
+    frameParams.descriptorSets = &descriptorSets;
+    frameParams.cameraUBO = &cameraUBO;
+    frameParams.directionalLightUBO = &directionalLightUBO;
+    frameParams.frames = &frames;
 
-    while (!engine.shouldClose()) {
-        engine.pollEvents();
-        engine.pollGamepads();
-        engine.inputManager().update();
-
-        clock.tick();
-        float dt = clock.deltaTime();
-
-        // Update entity (updates model matrix based on controller input)
-        entity.update(dt);
-
-        glm::mat4 view = glm::lookAt(
-            glm::vec3(0.1, 0.1, 0.1),
-            glm::vec3(0, 0, 0),
-            glm::vec3(0, 1, 0)
-        );
-
-        glm::mat4 proj = glm::perspective(
-            glm::radians(60.0f),
-            swapchain.getAspectRatio(),
-            0.01f, 200.0f
-        );
-        proj[1][1] *= -1;
-
-        CameraUBO u;
-        u.model = entity.model();
-        u.view = view;
-        u.proj = proj;
-        cameraUBO.upload(&u, sizeof(u));
-
-        DirectionalLightUBO light{};
-        light.direction = glm::vec4(0.0f, -1.0f, -0.3f, 0.0f);
-        light.color = glm::vec4(0.8f, 0.8f, 0.75f, 0.0f); // Reduced brightness from 1.0 to 0.8
-        directionalLightUBO.upload(&light, sizeof(light));
-
-        // Acquire frame
-        uint32_t imageIndex = frames.beginFrame();
-
-        VulkanCommandBuffer cmd = VulkanCommandBuffer(frames.getCommandBuffer());
-        cmd.begin();
-
-        // Begin render pass
-
-        cmd.beginRenderPass(renderPass, framebuffers[imageIndex], swapchain.getExtent());
-
-        cmd.bindPipeline(pipeline);
-        cmd.setViewport(swapchain.getExtent());
-        cmd.setScissor(swapchain.getExtent());
-        if (material && material->descriptorSet()) {
-            std::vector<VulkanDescriptorSet*> descriptorSetsToBind = { &descriptorSets[imageIndex], material->descriptorSet() };
-            cmd.bindDescriptorSets(pipelineLayout, descriptorSetsToBind);
-        }
-
-        // Use the meshes from the entity's RenderComponent
-        for (MeshId meshId : entity.renderComponent().meshIds) {
-            const Mesh* mesh = assetManager.getMesh(meshId);
-            if (mesh) {
-                mesh->bindVertexBuffer(cmd.getHandle());
-                if (mesh->hasIndices()) {
-                    mesh->bindIndexBuffer(cmd.getHandle());
-                    mesh->draw(cmd.getHandle());
-                } else {
-                    mesh->draw(cmd.getHandle());
-                }
-            }
-        }
-
-        cmd.endRenderPass();
-
-        frames.endFrame(cmd.getHandle(), imageIndex);
-    }
-
-    vkDeviceWaitIdle(ctx.device());
+    engine.run([&](float dt) {
+        engine.renderFrame(dt, frameParams);
+    });
 
     return 0;
 }

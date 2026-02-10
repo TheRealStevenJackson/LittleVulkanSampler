@@ -86,3 +86,21 @@ void SceneManager::unloadScene(const std::string& sceneName) {
 	}
 	m_scenes.erase(sceneName);
 }
+
+bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTry,
+	engine::Controller* controller)
+{
+	std::vector<MeshId> meshIds;
+	std::string loadedPath;
+	if (!m_assetManager->loadObjFromPaths(pathsToTry, meshIds, loadedPath))
+		return false;
+
+	std::vector<MaterialId> materialIds = m_assetManager->loadMaterials(loadedPath);
+
+	Entity entity;
+	entity.renderComponent().meshIds = std::move(meshIds);
+	entity.renderComponent().materialIds = std::move(materialIds);
+	entity.setController(controller);
+	m_loadedEntity = std::move(entity);
+	return true;
+}

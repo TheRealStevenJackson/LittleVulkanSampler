@@ -5,11 +5,22 @@
 #include <engine/scene/SceneManager.h>
 #include <platform/Window.h>
 #include <platform/GamepadReader.h>
+#include <platform/Clock.h>
 
+#include <functional>
 #include <memory>
+#include <vector>
 
 class VulkanContext;
 class AssetManager;
+class VulkanSwapchain;
+class VulkanRenderPass;
+class VulkanFramebuffer;
+class VulkanPipeline;
+class VulkanPipelineLayout;
+class VulkanDescriptorSet;
+class VulkanBuffer;
+class VulkanFrameManager;
 
 namespace engine {
 
@@ -53,11 +64,42 @@ public:
 	/** Call each frame to pump gamepad state into the input manager. */
 	void pollGamepads() { m_gamepadReader.poll(); }
 
+	/**
+	 * Run the main loop until the window requests close.
+	 * Each frame: polls events, updates input, ticks the engine clock, then invokes onFrame(dt).
+	 * Call vkDeviceWaitIdle after the loop so the GPU is idle when run() returns.
+	 */
+	void run(std::function<void(float)> onFrame);
+
+	/** Parameters for renderFrame(). Pass pointers to swapchain, pipeline, etc. owned by the sample. */
+	struct RenderFrameParams {
+		VulkanSwapchain* swapchain = nullptr;
+		VulkanRenderPass* renderPass = nullptr;
+		std::vector<VulkanFramebuffer>* framebuffers = nullptr;
+		VulkanPipeline* pipeline = nullptr;
+		VulkanPipelineLayout* pipelineLayout = nullptr;
+		std::vector<VulkanDescriptorSet>* descriptorSets = nullptr;
+		VulkanBuffer* cameraUBO = nullptr;
+		VulkanBuffer* directionalLightUBO = nullptr;
+		VulkanFrameManager* frames = nullptr;
+	};
+
+	/**
+	 * Perform one frame: update loaded entity, upload UBOs, acquire image, record and submit commands.
+	 * Uses sceneManager().loadedEntity() and assetManager() for entity and materials.
+	 */
+	void renderFrame(float dt, const RenderFrameParams& params);
+
+	/** Engine clock; updated each run() frame. Use for delta time inside onFrame. */
+	Clock& clock() { return m_clock; }
+	const Clock& clock() const { return m_clock; }
+
 private:
 	Window m_window;
 	core::InputManager m_inputManager;
 	GamepadReader m_gamepadReader;
 	Controller m_controller;
+	Clock m_clock;
 
 	std::unique_ptr<VulkanContext> m_context;
 	std::unique_ptr<AssetManager> m_assetManager;

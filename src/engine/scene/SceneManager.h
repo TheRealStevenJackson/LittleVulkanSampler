@@ -3,6 +3,7 @@
 #include "engine/scene/SceneLoader.h"
 #include "engine/scene/SceneResource.h"
 #include "core/asset/AssetManager.h"
+#include "engine/input/Controller.h"
 
 #include <optional>
 #include <string>
@@ -52,6 +53,18 @@ public:
 	/** Remove a named scene from storage. */
 	void unloadScene(const std::string& sceneName);
 
+	/**
+	 * Temporary: load a single entity from OBJ paths (tries paths, loads mesh + materials, creates Entity with controller).
+	 * Stores the entity in the manager; use loadedEntity() to access it.
+	 * \return true if loading succeeded, false if all paths failed.
+	 */
+	bool loadEntityTemporary(const std::vector<std::string>& pathsToTry,
+		engine::Controller* controller);
+
+	/** Temporary: get the entity loaded by loadEntityTemporary. Returns nullptr if none loaded. */
+	Entity* loadedEntity() { return m_loadedEntity.has_value() ? &*m_loadedEntity : nullptr; }
+	const Entity* loadedEntity() const { return m_loadedEntity.has_value() ? &*m_loadedEntity : nullptr; }
+
 	SceneLoader& loader() { return m_loader; }
 	const SceneLoader& loader() const { return m_loader; }
 
@@ -60,4 +73,5 @@ private:
 	SceneLoader m_loader;
 	std::unordered_map<std::string, SceneResource> m_scenes;
 	SceneResource* m_currentScene = nullptr;
+	std::optional<Entity> m_loadedEntity;
 };
