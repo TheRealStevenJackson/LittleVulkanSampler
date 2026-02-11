@@ -16,6 +16,7 @@
 #include <core/asset/types/Mesh.h>
 #include <engine/scene/SceneManager.h>
 #include <engine/scene/object/Entity.h>
+#include <engine/scene/object/Light.h>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
@@ -92,6 +93,10 @@ void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	if (!camera)
 		return;
 
+	Light* light = sceneManager().loadedLight();
+	if (!light)
+		return;
+
 	core::ViewProjUBO viewProj;
 	viewProj.view = camera->viewMatrix();
 	viewProj.proj = camera->projectionMatrix();
@@ -101,10 +106,10 @@ void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	modelUbo.model = entity->model();
 	params.modelUBO->upload(&modelUbo, sizeof(modelUbo));
 
-	core::DirectionalLightUBO light{};
-	light.direction = glm::vec4(0.0f, -1.0f, -0.3f, 0.0f);
-	light.color = glm::vec4(0.8f, 0.8f, 0.75f, 0.0f);
-	params.directionalLightUBO->upload(&light, sizeof(light));
+	core::DirectionalLightUBO lightUbo{};
+	lightUbo.direction = glm::vec4(light->direction(), 0.0f);
+	lightUbo.color = glm::vec4(light->color(), 1.0f);
+	params.directionalLightUBO->upload(&lightUbo, sizeof(lightUbo));
 
 	uint32_t imageIndex = params.frames->beginFrame();
 

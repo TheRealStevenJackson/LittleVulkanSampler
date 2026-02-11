@@ -39,6 +39,11 @@ int main() {
 
     engine.sceneManager().loadCameraTemporary(view, proj);
 
+    engine.sceneManager().loadLightTemporary(
+        glm::vec4(0.0f, -1.0f, -0.3f, 0.0f),
+        glm::vec4(0.8f, 0.8f, 0.75f, 0.0f)
+    );
+
     engine.run();
 
     return 0;

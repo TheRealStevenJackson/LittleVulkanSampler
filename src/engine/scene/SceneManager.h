@@ -3,6 +3,7 @@
 #include "engine/scene/SceneLoader.h"
 #include "engine/scene/SceneResource.h"
 #include "engine/scene/object/Camera.h"
+#include "engine/scene/object/Light.h"
 #include "core/asset/AssetManager.h"
 #include "engine/input/Controller.h"
 #include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
@@ -81,6 +82,17 @@ public:
 	Camera* loadedCamera() { return m_cameras.empty() ? nullptr : &m_cameras.front(); }
 	const Camera* loadedCamera() const { return m_cameras.empty() ? nullptr : &m_cameras.front(); }
 
+	/**
+	 * Temporary: create a directional light with the given direction and color (vec4 for UBO compatibility) and store it.
+	 * Use lights() to access the lights.
+	 * \return true (light is always created).
+	 */
+	bool loadLightTemporary(const glm::vec4& direction, const glm::vec4& color);
+
+	/** All lights created by loadLightTemporary. */
+	Light* loadedLight() { return m_lights.empty() ? nullptr : &m_lights.front(); }
+	const Light* loadedLight() const { return m_lights.empty() ? nullptr : &m_lights.front(); }
+
 	/** Update all loaded entities with the given delta time. */
 	void update(float dt);
 
@@ -94,4 +106,5 @@ private:
 	SceneResource* m_currentScene = nullptr;
 	std::vector<Entity> m_loadedEntities;
 	std::vector<Camera> m_cameras;
+	std::vector<Light> m_lights;
 };

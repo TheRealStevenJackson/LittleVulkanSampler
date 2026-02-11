@@ -121,6 +121,16 @@ bool SceneManager::loadCameraTemporary(const glm::mat4& view, const glm::mat4& p
 	return true;
 }
 
+bool SceneManager::loadLightTemporary(const glm::vec4& direction, const glm::vec4& color)
+{
+	Light light;
+	light.setType(Light::Type::Directional);
+	light.setDirection(glm::vec3(direction));
+	light.setColor(glm::vec3(color));
+	m_lights.push_back(std::move(light));
+	return true;
+}
+
 void SceneManager::update(float dt) {
 	for (Entity& entity : m_loadedEntities)
 		entity.update(dt);
