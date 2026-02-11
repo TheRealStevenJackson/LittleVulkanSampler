@@ -111,7 +111,20 @@ bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTr
 	return true;
 }
 
+bool SceneManager::loadCameraTemporary(const glm::mat4& view, const glm::mat4& proj)
+{
+	Camera camera;
+	camera.setViewMatrix(view);
+	camera.setProjectionMatrix(proj);
+	m_cameras.clear();
+	m_cameras.push_back(std::move(camera));
+	return true;
+}
+
 void SceneManager::update(float dt) {
 	for (Entity& entity : m_loadedEntities)
 		entity.update(dt);
+	// TODO: Uncomment when Entity::update() is fixed
+	// for (Camera& camera : m_cameras)
+	// 	camera.update(dt);
 }

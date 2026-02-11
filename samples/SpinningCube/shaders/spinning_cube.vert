@@ -10,12 +10,11 @@ layout(location = 0) out vec3 fragNormal;
 layout(location = 1) out vec2 fragTexCoord;
 layout(location = 2) out mat3 fragTBN;
 
-// Set = 0, Binding = 0: CameraUBO (model, view, proj)
-layout(set = 0, binding = 0) uniform CameraUBO {
-    mat4 model;
+// Set = 0, Binding = 0: ViewProjUBO (view, proj)
+layout(set = 0, binding = 0) uniform ViewProjUBO {
     mat4 view;
     mat4 proj;
-} ubo;
+} viewProj;
 
 // Set = 0, Binding = 1: DirectionalLightUBO
 layout(set = 0, binding = 1) uniform DirectionalLightUBO {
@@ -23,13 +22,18 @@ layout(set = 0, binding = 1) uniform DirectionalLightUBO {
     vec4 color;      // rgb = light color
 } light;
 
+// Set = 2, Binding = 0: Model matrix
+layout(set = 2, binding = 0) uniform ModelUBO {
+    mat4 model;
+} modelUbo;
+
 void main()
 {
-    mat4 mvp = ubo.proj * ubo.view * ubo.model;
+    mat4 mvp = viewProj.proj * viewProj.view * modelUbo.model;
     gl_Position = mvp * vec4(inPosition, 1.0);
     
     // Transform normal, tangent, and bitangent to world space
-    mat3 normalMatrix = mat3(transpose(inverse(ubo.model)));
+    mat3 normalMatrix = mat3(transpose(inverse(modelUbo.model)));
     fragNormal = normalize(normalMatrix * inNormal);
     vec3 T = normalize(normalMatrix * inTangent);
     vec3 B = normalize(normalMatrix * inBitangent);

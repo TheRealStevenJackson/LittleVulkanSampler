@@ -1,5 +1,6 @@
 #include "engine/Engine.h"
 #include <core/renderer/Renderer.h>
+#include <core/renderer/RenderTypes.h>
 #include <platform/graphics/vulkan/VulkanContext.h>
 #include <platform/graphics/vulkan/VulkanSwapchain.h>
 #include <platform/graphics/vulkan/VulkanRenderPass.h>
@@ -16,7 +17,6 @@
 #include <engine/scene/SceneManager.h>
 #include <engine/scene/object/Entity.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <vulkan/vulkan.h>
 
 namespace engine {
@@ -72,29 +72,14 @@ void Engine::run() {
 	vkDeviceWaitIdle(context().device());
 }
 
-namespace {
-
-struct CameraUBO {
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
-};
-
-struct DirectionalLightUBO {
-	glm::vec4 direction;
-	glm::vec4 color;
-};
-
-} // namespace
-
 void Engine::renderFrame(float dt) {
 	renderFrame(dt, m_renderer->getRenderFrameParams());
 }
 
 void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	if (!params.swapchain || !params.renderPass || !params.framebuffers || !params.pipeline ||
-	    !params.pipelineLayout || !params.descriptorSets || !params.cameraUBO ||
-	    !params.directionalLightUBO || !params.frames)
+	    !params.pipelineLayout || !params.descriptorSets || !params.modelDescriptorSets ||
+	    !params.cameraUBO || !params.modelUBO || !params.directionalLightUBO || !params.frames)
 		return;
 
 	sceneManager().update(dt);
@@ -103,26 +88,20 @@ void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	if (!entity)
 		return;
 
-	glm::mat4 view = glm::lookAt(
-		glm::vec3(0.1f, 0.1f, 0.1f),
-		glm::vec3(0, 0, 0),
-		glm::vec3(0, 1, 0)
-	);
+	Camera* camera = sceneManager().loadedCamera();
+	if (!camera)
+		return;
 
-	glm::mat4 proj = glm::perspective(
-		glm::radians(60.0f),
-		params.swapchain->getAspectRatio(),
-		0.01f, 200.0f
-	);
-	proj[1][1] *= -1;
+	core::ViewProjUBO viewProj;
+	viewProj.view = camera->viewMatrix();
+	viewProj.proj = camera->projectionMatrix();
+	params.cameraUBO->upload(&viewProj, sizeof(viewProj));
 
-	CameraUBO u;
-	u.model = entity->model();
-	u.view = view;
-	u.proj = proj;
-	params.cameraUBO->upload(&u, sizeof(u));
+	core::ModelUBO modelUbo;
+	modelUbo.model = entity->model();
+	params.modelUBO->upload(&modelUbo, sizeof(modelUbo));
 
-	DirectionalLightUBO light{};
+	core::DirectionalLightUBO light{};
 	light.direction = glm::vec4(0.0f, -1.0f, -0.3f, 0.0f);
 	light.color = glm::vec4(0.8f, 0.8f, 0.75f, 0.0f);
 	params.directionalLightUBO->upload(&light, sizeof(light));
@@ -143,7 +122,8 @@ void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 	if (material && material->descriptorSet()) {
 		std::vector<VulkanDescriptorSet*> descriptorSetsToBind = {
 			&(*params.descriptorSets)[imageIndex],
-			material->descriptorSet()
+			material->descriptorSet(),
+			&(*params.modelDescriptorSets)[imageIndex]
 		};
 		cmd.bindDescriptorSets(*params.pipelineLayout, descriptorSetsToBind);
 	}

@@ -1,6 +1,9 @@
 #include <engine/Engine.h>
 #include <engine/scene/object/Entity.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <iostream>
 #include <filesystem>
 
@@ -20,7 +23,21 @@ int main() {
         }
         return -1;
     }
-    const Entity* entity = engine.sceneManager().loadedEntity();
+
+    glm::mat4 view = glm::lookAt(
+        glm::vec3(0.1f, 0.1f, 0.1f),
+        glm::vec3(0, 0, 0),
+        glm::vec3(0, 1, 0)
+    );
+
+    glm::mat4 proj = glm::perspective(
+        glm::radians(60.0f),
+        1.0f,
+        0.01f, 200.0f
+    );
+    proj[1][1] *= -1;
+
+    engine.sceneManager().loadCameraTemporary(view, proj);
 
     engine.run();
 

@@ -2,9 +2,11 @@
 
 #include "engine/scene/SceneLoader.h"
 #include "engine/scene/SceneResource.h"
+#include "engine/scene/object/Camera.h"
 #include "core/asset/AssetManager.h"
 #include "engine/input/Controller.h"
 #include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
+#include <glm/glm.hpp>
 
 #include <optional>
 #include <string>
@@ -68,6 +70,17 @@ public:
 	Entity* loadedEntity() { return m_loadedEntities.empty() ? nullptr : &m_loadedEntities.front(); }
 	const Entity* loadedEntity() const { return m_loadedEntities.empty() ? nullptr : &m_loadedEntities.front(); }
 
+	/**
+	 * Temporary: create a camera with initial view and projection matrices and store it in the manager.
+	 * Use loadedCamera() to access the camera.
+	 * \return true (camera is always created).
+	 */
+	bool loadCameraTemporary(const glm::mat4& view, const glm::mat4& proj);
+
+	/** Temporary: get the first camera created by loadCameraTemporary. Returns nullptr if none. */
+	Camera* loadedCamera() { return m_cameras.empty() ? nullptr : &m_cameras.front(); }
+	const Camera* loadedCamera() const { return m_cameras.empty() ? nullptr : &m_cameras.front(); }
+
 	/** Update all loaded entities with the given delta time. */
 	void update(float dt);
 
@@ -80,4 +93,5 @@ private:
 	std::unordered_map<std::string, SceneResource> m_scenes;
 	SceneResource* m_currentScene = nullptr;
 	std::vector<Entity> m_loadedEntities;
+	std::vector<Camera> m_cameras;
 };

@@ -85,7 +85,9 @@ public:
 		VulkanPipeline* pipeline = nullptr;
 		VulkanPipelineLayout* pipelineLayout = nullptr;
 		std::vector<VulkanDescriptorSet>* descriptorSets = nullptr;
+		std::vector<VulkanDescriptorSet>* modelDescriptorSets = nullptr;
 		VulkanBuffer* cameraUBO = nullptr;
+		VulkanBuffer* modelUBO = nullptr;
 		VulkanBuffer* directionalLightUBO = nullptr;
 		VulkanFrameManager* frames = nullptr;
 	};

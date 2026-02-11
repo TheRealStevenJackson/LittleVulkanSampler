@@ -17,10 +17,14 @@ struct Vertex {
     float bitangent[3];
 };
 
-struct CameraUBO {
-    float model[16];
+// Set 0: view + proj (model moved to set 2)
+struct ViewProjUBO {
     float view[16];
     float proj[16];
+};
+
+struct ModelUBO {
+    float model[16];
 };
 
 struct DirectionalLightUBO {
@@ -52,6 +56,7 @@ Renderer::Renderer(VulkanContext& ctx, Window& window, AssetManager& assetManage
 
     createGlobalDescriptorLayout();
     createMaterialDescriptorLayout();
+    createModelDescriptorLayout();
     createPipelineLayout();
     createPipeline();
     createUniformBuffers();
@@ -87,6 +92,7 @@ void Renderer::createFramebuffers() {
 }
 
 void Renderer::createGlobalDescriptorLayout() {
+    // Set 0: binding 0 = view+proj, binding 1 = directional light
     std::vector<VkDescriptorSetLayoutBinding> layoutBindings(2);
     layoutBindings[0].binding = 0;
     layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -100,6 +106,18 @@ void Renderer::createGlobalDescriptorLayout() {
     layoutBindings[1].pImmutableSamplers = nullptr;
 
     m_descriptorLayout = std::make_unique<VulkanDescriptorSetLayout>(m_ctx, layoutBindings);
+}
+
+void Renderer::createModelDescriptorLayout() {
+    // Set 2: binding 0 = model matrix
+    std::vector<VkDescriptorSetLayoutBinding> layoutBindings(1);
+    layoutBindings[0].binding = 0;
+    layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layoutBindings[0].descriptorCount = 1;
+    layoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    layoutBindings[0].pImmutableSamplers = nullptr;
+
+    m_modelDescriptorLayout = std::make_unique<VulkanDescriptorSetLayout>(m_ctx, layoutBindings);
 }
 
 void Renderer::createMaterialDescriptorLayout() {
@@ -139,7 +157,11 @@ void Renderer::createMaterialDescriptorLayout() {
 }
 
 void Renderer::createPipelineLayout() {
-    std::vector<VulkanDescriptorSetLayout*> layouts = { m_descriptorLayout.get(), m_materialDescriptorLayout.get() };
+    std::vector<VulkanDescriptorSetLayout*> layouts = {
+        m_descriptorLayout.get(),
+        m_materialDescriptorLayout.get(),
+        m_modelDescriptorLayout.get()
+    };
     m_pipelineLayout = std::make_unique<VulkanPipelineLayout>(m_ctx, layouts);
 }
 
@@ -169,16 +191,29 @@ void Renderer::createPipeline() {
 }
 
 void Renderer::createUniformBuffers() {
-    CameraUBO initUBO{};
+    ViewProjUBO initViewProj{};
     for (int i = 0; i < 16; i++) {
-        initUBO.model[i] = (i % 5 == 0) ? 1.0f : 0.0f;
-        initUBO.view[i] = (i % 5 == 0) ? 1.0f : 0.0f;
-        initUBO.proj[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+        initViewProj.view[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+        initViewProj.proj[i] = (i % 5 == 0) ? 1.0f : 0.0f;
     }
     m_cameraUBO = std::make_unique<VulkanBuffer>(
         m_ctx,
-        &initUBO,
-        sizeof(CameraUBO),
+        &initViewProj,
+        sizeof(ViewProjUBO),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+    );
+
+    ModelUBO initModel{};
+    for (int i = 0; i < 16; i++) {
+        initModel.model[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    }
+    m_modelUBO = std::make_unique<VulkanBuffer>(
+        m_ctx,
+        &initModel,
+        sizeof(ModelUBO),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -206,18 +241,26 @@ void Renderer::createUniformBuffers() {
 }
 
 void Renderer::createGlobalDescriptorPoolAndSets() {
-    m_descriptorPool = std::make_unique<VulkanDescriptorPool>(
-        m_ctx,
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        2u * m_swapchain->imageCount()
-    );
+    // Set 0: 2 UBOs per image; set 2: 1 UBO per image
+    std::vector<VkDescriptorPoolSize> poolSizes = {
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3u * m_swapchain->imageCount() }
+    };
+    uint32_t maxSets = 2u * m_swapchain->imageCount();
+    m_descriptorPool = std::make_unique<VulkanDescriptorPool>(m_ctx, poolSizes, maxSets);
 
     m_descriptorSets.clear();
     m_descriptorSets.reserve(m_swapchain->imageCount());
     for (uint32_t i = 0; i < m_swapchain->imageCount(); i++) {
         m_descriptorSets.emplace_back(m_ctx, *m_descriptorPool, *m_descriptorLayout);
-        m_descriptorSets.back().writeUniformBuffer(*m_cameraUBO, sizeof(CameraUBO), 0);
+        m_descriptorSets.back().writeUniformBuffer(*m_cameraUBO, sizeof(ViewProjUBO), 0);
         m_descriptorSets.back().writeUniformBuffer(*m_directionalLightUBO, sizeof(DirectionalLightUBO), 1);
+    }
+
+    m_modelDescriptorSets.clear();
+    m_modelDescriptorSets.reserve(m_swapchain->imageCount());
+    for (uint32_t i = 0; i < m_swapchain->imageCount(); i++) {
+        m_modelDescriptorSets.emplace_back(m_ctx, *m_descriptorPool, *m_modelDescriptorLayout);
+        m_modelDescriptorSets.back().writeUniformBuffer(*m_modelUBO, sizeof(ModelUBO), 0);
     }
 }
 
@@ -229,7 +272,9 @@ engine::Engine::RenderFrameParams Renderer::getRenderFrameParams() {
     params.pipeline = m_pipeline.get();
     params.pipelineLayout = m_pipelineLayout.get();
     params.descriptorSets = &m_descriptorSets;
+    params.modelDescriptorSets = &m_modelDescriptorSets;
     params.cameraUBO = m_cameraUBO.get();
+    params.modelUBO = m_modelUBO.get();
     params.directionalLightUBO = m_directionalLightUBO.get();
     params.frames = m_frames.get();
     return params;

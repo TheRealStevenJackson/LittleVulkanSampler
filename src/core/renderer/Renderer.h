@@ -48,6 +48,7 @@ private:
 	void createFramebuffers();
 	void createGlobalDescriptorLayout();
 	void createMaterialDescriptorLayout();
+	void createModelDescriptorLayout();
 	void createPipelineLayout();
 	void createPipeline();
 	void createUniformBuffers();
@@ -67,14 +68,17 @@ private:
 
 	std::unique_ptr<VulkanDescriptorSetLayout> m_descriptorLayout;
 	std::unique_ptr<VulkanDescriptorSetLayout> m_materialDescriptorLayout;
+	std::unique_ptr<VulkanDescriptorSetLayout> m_modelDescriptorLayout;
 	std::unique_ptr<VulkanPipelineLayout> m_pipelineLayout;
 	std::unique_ptr<VulkanPipeline> m_pipeline;
 
 	std::unique_ptr<VulkanBuffer> m_cameraUBO;
 	std::unique_ptr<VulkanBuffer> m_directionalLightUBO;
+	std::unique_ptr<VulkanBuffer> m_modelUBO;
 
 	std::unique_ptr<VulkanDescriptorPool> m_descriptorPool;
 	std::vector<VulkanDescriptorSet> m_descriptorSets;
+	std::vector<VulkanDescriptorSet> m_modelDescriptorSets;
 
 	std::unique_ptr<VulkanFrameManager> m_frames;
 };
