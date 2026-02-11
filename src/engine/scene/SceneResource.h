@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/Entity.h"
+#include "engine/scene/object/Entity.h"
 
 #include <string>
 #include <vector>

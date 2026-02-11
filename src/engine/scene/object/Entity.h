@@ -1,9 +1,9 @@
 #pragma once
 
-#include "game/RenderComponent.h"
+#include "engine/scene/object/component/RenderComponent.h"
+#include "engine/scene/object/component/TransformComponent.h"
 #include "engine/input/Controller.h"
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 /**
  * Entity in the game layer.
@@ -26,33 +26,30 @@ public:
 	RenderComponent& renderComponent() { return m_renderComponent; }
 	const RenderComponent& renderComponent() const { return m_renderComponent; }
 
+	TransformComponent& transformComponent() { return m_transform; }
+	const TransformComponent& transformComponent() const { return m_transform; }
+
 	void setController(engine::Controller* controller) { m_controller = controller; }
 	engine::Controller* controller() { return m_controller; }
 	const engine::Controller* controller() const { return m_controller; }
 
-	glm::mat4& model() { return m_model; }
-	const glm::mat4& model() const { return m_model; }
+	/** Model matrix from transform component (position, rotation, scale). */
+	glm::mat4 model() const { return m_transform.modelMatrix(); }
 
 	void update(float dt) {
 		const float rotationSpeedScale = 1.0f;
 		if (m_controller) {
 			// LeftStickX -> rotation around Y axis (yaw)
 			// LeftStickY -> rotation around X axis (pitch)
-			m_angleY += dt * m_controller->leftStickX.load() * rotationSpeedScale;
-			m_angleX += dt * m_controller->leftStickY.load() * rotationSpeedScale;
+			m_transform.rotation.y += dt * m_controller->leftStickX.load() * rotationSpeedScale;
+			m_transform.rotation.x += dt * m_controller->leftStickY.load() * rotationSpeedScale;
 		} else {
-			m_angleY += dt * 1.0f;
+			m_transform.rotation.y += dt * 1.0f;
 		}
-		// Apply Y rotation first, then X rotation
-		m_model = glm::mat4(1.0f);
-		m_model = glm::rotate(m_model, m_angleY, glm::vec3(0, 1, 0));
-		m_model = glm::rotate(m_model, m_angleX, glm::vec3(1, 0, 0));
 	}
 
 private:
 	RenderComponent m_renderComponent;
+	TransformComponent m_transform;
 	engine::Controller* m_controller = nullptr;
-	glm::mat4 m_model = glm::mat4(1.0f);
-	float m_angleX = 0.0f;  // rotation around X (pitch), from LeftStickY
-	float m_angleY = 0.0f;  // rotation around Y (yaw), from LeftStickX
 };

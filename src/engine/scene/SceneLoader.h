@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/asset/AssetManager.h"
-#include "game/Entity.h"
+#include "engine/scene/object/Entity.h"
 
 #include <optional>
 #include <string>

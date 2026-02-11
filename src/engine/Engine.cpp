@@ -14,7 +14,7 @@
 #include <core/asset/types/Material.h>
 #include <core/asset/types/Mesh.h>
 #include <engine/scene/SceneManager.h>
-#include <game/Entity.h>
+#include <engine/scene/object/Entity.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vulkan/vulkan.h>
