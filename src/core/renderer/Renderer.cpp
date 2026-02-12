@@ -39,6 +39,7 @@ Renderer::Renderer(VulkanContext& ctx, Window& window, AssetManager& assetManage
     , m_window(&window)
     , m_assetManager(&assetManager)
 {
+    m_renderScene = std::make_unique<RenderScene>();
     m_swapchain = std::make_unique<VulkanSwapchain>(ctx, window.getHandle());
     createDepthResources();
     m_renderPass = std::make_unique<VulkanRenderPass>(

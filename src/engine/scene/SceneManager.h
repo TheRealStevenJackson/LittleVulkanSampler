@@ -5,6 +5,7 @@
 #include "engine/scene/object/Camera.h"
 #include "engine/scene/object/Light.h"
 #include "core/asset/AssetManager.h"
+#include "core/common/IRenderScene.h"
 #include "engine/input/Controller.h"
 #include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
 #include <glm/glm.hpp>
@@ -96,12 +97,20 @@ public:
 	/** Update all loaded entities with the given delta time. */
 	void update(float dt);
 
+	/** Set the render scene (e.g. from Renderer::getRenderScene()). Can be nullptr. */
+	void setRenderScene(core::IRenderScene* renderScene) { m_renderScene = renderScene; }
+
+	/** Get the current render scene, or nullptr if not set. */
+	core::IRenderScene* renderScene() { return m_renderScene; }
+	const core::IRenderScene* renderScene() const { return m_renderScene; }
+
 	SceneLoader& loader() { return m_loader; }
 	const SceneLoader& loader() const { return m_loader; }
 
 private:
 	AssetManager* m_assetManager;
 	SceneLoader m_loader;
+	core::IRenderScene* m_renderScene = nullptr;
 	std::unordered_map<std::string, SceneResource> m_scenes;
 	SceneResource* m_currentScene = nullptr;
 	std::vector<Entity> m_loadedEntities;

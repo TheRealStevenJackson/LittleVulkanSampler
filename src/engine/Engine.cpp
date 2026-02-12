@@ -34,6 +34,7 @@ Engine::Engine(const WindowDesc& desc)
 	m_window.setInputReceiver(&m_inputManager);
 	m_gamepadReader.setInputReceiver(&m_inputManager);
 	m_renderer = std::make_unique<core::Renderer>(*m_context, m_window, *m_assetManager);
+	m_sceneManager.setRenderScene(m_renderer->getRenderScene());
 }
 
 Engine::~Engine() = default;

@@ -15,6 +15,7 @@
 #include <platform/graphics/vulkan/VulkanDescriptorPool.h>
 #include <platform/graphics/vulkan/VulkanDescriptorSet.h>
 #include <platform/graphics/vulkan/VulkanFrameManager.h>
+#include "core/renderer/RenderScene.h"
 
 #include <memory>
 #include <vector>
@@ -42,6 +43,10 @@ public:
 	/** Material descriptor layout; used to update material descriptor sets after loading entities. */
 	VulkanDescriptorSetLayout* getMaterialDescriptorLayout() { return m_materialDescriptorLayout.get(); }
 	const VulkanDescriptorSetLayout* getMaterialDescriptorLayout() const { return m_materialDescriptorLayout.get(); }
+
+	/** Scene that holds render proxies; created in the constructor. */
+	RenderScene* getRenderScene() { return m_renderScene.get(); }
+	const RenderScene* getRenderScene() const { return m_renderScene.get(); }
 
 private:
 	void createDepthResources();
@@ -81,6 +86,7 @@ private:
 	std::vector<VulkanDescriptorSet> m_modelDescriptorSets;
 
 	std::unique_ptr<VulkanFrameManager> m_frames;
+	std::unique_ptr<RenderScene> m_renderScene;
 };
 
 } // namespace core

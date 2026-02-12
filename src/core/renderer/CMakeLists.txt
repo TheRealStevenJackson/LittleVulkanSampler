@@ -1,5 +1,6 @@
 add_library(Renderer STATIC
 	Renderer.cpp
+	RenderScene.cpp
 )
 
 target_include_directories(Renderer

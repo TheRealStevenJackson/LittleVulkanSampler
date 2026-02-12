@@ -1,4 +1,5 @@
 #include "engine/scene/SceneManager.h"
+#include "core/math/Transform.h"
 
 #include <algorithm>
 #include <cctype>
@@ -102,6 +103,18 @@ bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTr
 	entity.renderComponent().meshIds = std::move(meshIds);
 	entity.renderComponent().materialIds = std::move(materialIds);
 	entity.setController(controller);
+
+	if (m_renderScene) {
+		core::Transform transform(entity.model());
+		const auto& meshIds = entity.renderComponent().meshIds;
+		MaterialId materialId = entity.renderComponent().materialIds.empty()
+			? InvalidMaterialId
+			: entity.renderComponent().materialIds.front();
+		entity.renderComponent().renderProxyIds.clear();
+		entity.renderComponent().renderProxyIds.push_back(
+			m_renderScene->registerProxy(meshIds, materialId, transform));
+	}
+
 	m_loadedEntities.clear();
 	m_loadedEntities.push_back(std::move(entity));
 
@@ -132,8 +145,16 @@ bool SceneManager::loadLightTemporary(const glm::vec4& direction, const glm::vec
 }
 
 void SceneManager::update(float dt) {
-	for (Entity& entity : m_loadedEntities)
+	for (Entity& entity : m_loadedEntities) {
 		entity.update(dt);
+		if (m_renderScene) {
+			const auto& rc = entity.renderComponent();
+			MaterialId materialId = rc.materialIds.empty() ? InvalidMaterialId : rc.materialIds.front();
+			core::Transform transform(entity.model());
+			for (uint32_t handle : rc.renderProxyIds)
+				m_renderScene->updateProxy(handle, rc.meshIds, materialId, transform);
+		}
+	}
 	// TODO: Uncomment when Entity::update() is fixed
 	// for (Camera& camera : m_cameras)
 	// 	camera.update(dt);
