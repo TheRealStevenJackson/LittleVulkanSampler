@@ -86,6 +86,8 @@ void Engine::renderFrame(float dt, const RenderFrameParams& params) {
 
 	sceneManager().update(dt);
 
+	m_renderer->getRenderScene()->logProxyData();
+
 	Entity* entity = sceneManager().loadedEntity();
 	if (!entity)
 		return;

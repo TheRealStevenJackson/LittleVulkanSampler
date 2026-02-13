@@ -1,4 +1,5 @@
 #include "engine/scene/SceneManager.h"
+#include "core/common/RenderDataTypes.h"
 #include "core/math/Transform.h"
 
 #include <algorithm>
@@ -105,14 +106,21 @@ bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTr
 	entity.setController(controller);
 
 	if (m_renderScene) {
-		core::Transform transform(entity.model());
+		const glm::mat4 transform = entity.model();
 		const auto& meshIds = entity.renderComponent().meshIds;
 		MaterialId materialId = entity.renderComponent().materialIds.empty()
 			? InvalidMaterialId
 			: entity.renderComponent().materialIds.front();
 		entity.renderComponent().renderProxyIds.clear();
-		entity.renderComponent().renderProxyIds.push_back(
-			m_renderScene->registerProxy(meshIds, materialId, transform));
+		for (MeshId meshId : meshIds) {
+			core::RenderProxyUpdate update{};
+			update.type = core::ProxyType::Model;
+			update.proxyID = 0;
+			update.transform = transform;
+			update.data.model = { transform, materialId, meshId, {} };
+			entity.renderComponent().renderProxyIds.push_back(
+				m_renderScene->registerProxy(update));
+		}
 	}
 
 	m_loadedEntities.clear();
@@ -129,6 +137,18 @@ bool SceneManager::loadCameraTemporary(const glm::mat4& view, const glm::mat4& p
 	Camera camera;
 	camera.setViewMatrix(view);
 	camera.setProjectionMatrix(proj);
+	if (m_renderScene) {
+		core::RenderProxyUpdate update{};
+		update.type = core::ProxyType::Camera;
+		update.proxyID = 0;
+		update.transform = glm::mat4(1.0f);
+		update.data.camera.view = view;
+		update.data.camera.projection = proj;
+		update.data.camera.worldPos = glm::vec3(0.0f);
+		update.data.camera.padding = 0.0f;
+		camera.renderComponent().renderProxyIds.clear();
+		camera.renderComponent().renderProxyIds.push_back(m_renderScene->registerProxy(update));
+	}
 	m_cameras.clear();
 	m_cameras.push_back(std::move(camera));
 	return true;
@@ -140,6 +160,16 @@ bool SceneManager::loadLightTemporary(const glm::vec4& direction, const glm::vec
 	light.setType(Light::Type::Directional);
 	light.setDirection(glm::vec3(direction));
 	light.setColor(glm::vec3(color));
+	if (m_renderScene) {
+		core::RenderProxyUpdate update{};
+		update.type = core::ProxyType::DirectionalLight;
+		update.proxyID = 0;
+		update.transform = glm::mat4(1.0f);
+		update.data.light.direction = direction;
+		update.data.light.color = color;
+		light.renderComponent().renderProxyIds.clear();
+		light.renderComponent().renderProxyIds.push_back(m_renderScene->registerProxy(update));
+	}
 	m_lights.push_back(std::move(light));
 	return true;
 }
@@ -151,8 +181,8 @@ void SceneManager::update(float dt) {
 			const auto& rc = entity.renderComponent();
 			MaterialId materialId = rc.materialIds.empty() ? InvalidMaterialId : rc.materialIds.front();
 			core::Transform transform(entity.model());
-			for (uint32_t handle : rc.renderProxyIds)
-				m_renderScene->updateProxy(handle, rc.meshIds, materialId, transform);
+			for (size_t i = 0; i < rc.renderProxyIds.size() && i < rc.meshIds.size(); ++i)
+				m_renderScene->updateProxy(rc.renderProxyIds[i], { rc.meshIds[i] }, materialId, transform);
 		}
 	}
 	// TODO: Uncomment when Entity::update() is fixed
