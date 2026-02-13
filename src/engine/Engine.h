@@ -13,14 +13,6 @@
 class VulkanContext;
 class AssetManager;
 namespace core { class Renderer; }
-class VulkanSwapchain;
-class VulkanRenderPass;
-class VulkanFramebuffer;
-class VulkanPipeline;
-class VulkanPipelineLayout;
-class VulkanDescriptorSet;
-class VulkanBuffer;
-class VulkanFrameManager;
 
 namespace engine {
 
@@ -72,36 +64,10 @@ public:
 
 	/**
 	 * Run the main loop until the window requests close.
-	 * Each frame: polls events, updates input, ticks the engine clock, then calls renderFrame(dt).
+	 * Each frame: polls events, updates input, ticks the clock, updates the scene, logs proxy data, and renders.
 	 * Call vkDeviceWaitIdle after the loop so the GPU is idle when run() returns.
 	 */
 	void run();
-
-	/** Parameters for renderFrame(). Pass pointers to swapchain, pipeline, etc. owned by the sample. */
-	struct RenderFrameParams {
-		VulkanSwapchain* swapchain = nullptr;
-		VulkanRenderPass* renderPass = nullptr;
-		std::vector<VulkanFramebuffer>* framebuffers = nullptr;
-		VulkanPipeline* pipeline = nullptr;
-		VulkanPipelineLayout* pipelineLayout = nullptr;
-		std::vector<VulkanDescriptorSet>* descriptorSets = nullptr;
-		std::vector<VulkanDescriptorSet>* modelDescriptorSets = nullptr;
-		VulkanBuffer* cameraUBO = nullptr;
-		VulkanBuffer* modelUBO = nullptr;
-		VulkanBuffer* directionalLightUBO = nullptr;
-		VulkanFrameManager* frames = nullptr;
-	};
-
-	/**
-	 * Perform one frame using the engine's renderer: update loaded entity, upload UBOs, acquire image, record and submit commands.
-	 * Uses sceneManager().loadedEntity() and assetManager() for entity and materials.
-	 */
-	void renderFrame(float dt);
-
-	/**
-	 * Same as renderFrame(dt) but with explicit params (e.g. when using a custom renderer).
-	 */
-	void renderFrame(float dt, const RenderFrameParams& params);
 
 	/** Engine clock; updated each run() frame. Use for delta time inside onFrame. */
 	Clock& clock() { return m_clock; }

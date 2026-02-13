@@ -4,18 +4,30 @@
 
 namespace core {
 
+// Vertex layout matching loaded mesh (pos, normal, texCoord, tangent, bitangent)
+struct Vertex {
+	float pos[3];
+	float normal[3];
+	float texCoord[2];
+	float tangent[3];
+	float bitangent[3];
+};
+
+// Set 0: view + proj (model moved to set 2)
 struct ViewProjUBO {
-	glm::mat4 view;
-	glm::mat4 proj;
+	float view[16];
+	float proj[16];
+};
+
+struct DirectionalLightUBO {
+	float direction[4];
+	float color[4];
 };
 
 struct ModelUBO {
 	glm::mat4 model;
 };
 
-struct DirectionalLightUBO {
-	glm::vec4 direction;
-	glm::vec4 color;
-};
+
 
 } // namespace core

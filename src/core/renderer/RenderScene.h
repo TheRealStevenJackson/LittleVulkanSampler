@@ -29,6 +29,7 @@ public:
 
 	const std::unordered_map<uint32_t, RenderProxy>& cameras() const { return m_cameras; }
 	const std::unordered_map<uint32_t, RenderProxy>& lights() const { return m_lights; }
+	const std::unordered_map<uint32_t, RenderProxyEntry>& models() const { return m_models; }
 
 private:
 	std::unordered_map<uint32_t, RenderProxyEntry> m_models;

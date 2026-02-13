@@ -1,38 +1,16 @@
 #include "core/renderer/Renderer.h"
+#include "core/common/RenderDataTypes.h"
+#include "core/renderer/RenderTypes.h"
+#include "core/asset/types/Mesh.h"
+#include "core/asset/types/Material.h"
 #include <platform/graphics/vulkan/VulkanShaderModule.h>
+#include <platform/graphics/vulkan/VulkanCommandBuffer.h>
 #include <vulkan/vulkan.h>
 #include <vma/vk_mem_alloc.h>
+#include <cstring>
 #include <iostream>
 
 namespace core {
-
-namespace {
-
-// Vertex layout matching loaded mesh (pos, normal, texCoord, tangent, bitangent)
-struct Vertex {
-    float pos[3];
-    float normal[3];
-    float texCoord[2];
-    float tangent[3];
-    float bitangent[3];
-};
-
-// Set 0: view + proj (model moved to set 2)
-struct ViewProjUBO {
-    float view[16];
-    float proj[16];
-};
-
-struct ModelUBO {
-    float model[16];
-};
-
-struct DirectionalLightUBO {
-    float direction[4];
-    float color[4];
-};
-
-} // namespace
 
 Renderer::Renderer(VulkanContext& ctx, Window& window, AssetManager& assetManager)
     : m_ctx(ctx)
@@ -207,14 +185,12 @@ void Renderer::createUniformBuffers() {
         VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
     );
 
-    ModelUBO initModel{};
-    for (int i = 0; i < 16; i++) {
-        initModel.model[i] = (i % 5 == 0) ? 1.0f : 0.0f;
-    }
+    core::ModelUBO initModel{};
+    initModel.model = glm::mat4(1.0f);
     m_modelUBO = std::make_unique<VulkanBuffer>(
         m_ctx,
         &initModel,
-        sizeof(ModelUBO),
+        sizeof(core::ModelUBO),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -261,24 +237,71 @@ void Renderer::createGlobalDescriptorPoolAndSets() {
     m_modelDescriptorSets.reserve(m_swapchain->imageCount());
     for (uint32_t i = 0; i < m_swapchain->imageCount(); i++) {
         m_modelDescriptorSets.emplace_back(m_ctx, *m_descriptorPool, *m_modelDescriptorLayout);
-        m_modelDescriptorSets.back().writeUniformBuffer(*m_modelUBO, sizeof(ModelUBO), 0);
+        m_modelDescriptorSets.back().writeUniformBuffer(*m_modelUBO, sizeof(core::ModelUBO), 0);
     }
 }
 
-engine::Engine::RenderFrameParams Renderer::getRenderFrameParams() {
-    engine::Engine::RenderFrameParams params;
-    params.swapchain = m_swapchain.get();
-    params.renderPass = m_renderPass.get();
-    params.framebuffers = &m_framebuffers;
-    params.pipeline = m_pipeline.get();
-    params.pipelineLayout = m_pipelineLayout.get();
-    params.descriptorSets = &m_descriptorSets;
-    params.modelDescriptorSets = &m_modelDescriptorSets;
-    params.cameraUBO = m_cameraUBO.get();
-    params.modelUBO = m_modelUBO.get();
-    params.directionalLightUBO = m_directionalLightUBO.get();
-    params.frames = m_frames.get();
-    return params;
+void Renderer::renderFrame() {
+	const auto& cameras = m_renderScene->cameras();
+	if (!cameras.empty()) {
+		const RenderProxy& cameraProxy = cameras.begin()->second;
+		const CameraData& cam = cameraProxy.cameraData();
+		ViewProjUBO viewProj;
+		std::memcpy(viewProj.view, &cam.view, sizeof(viewProj.view));
+		std::memcpy(viewProj.proj, &cam.projection, sizeof(viewProj.proj));
+		m_cameraUBO->upload(&viewProj, sizeof(viewProj));
+	}
+	const auto& lights = m_renderScene->lights();
+	if (!lights.empty()) {
+		const RenderProxy& lightProxy = lights.begin()->second;
+		const DirectionalLightData& light = lightProxy.directionalLightData();
+		DirectionalLightUBO lightUbo;
+		std::memcpy(lightUbo.direction, &light.direction, sizeof(lightUbo.direction));
+		std::memcpy(lightUbo.color, &light.color, sizeof(lightUbo.color));
+		m_directionalLightUBO->upload(&lightUbo, sizeof(lightUbo));
+	}
+
+	uint32_t imageIndex = m_frames->beginFrame();
+	VulkanCommandBuffer cmd(m_frames->getCommandBuffer());
+	cmd.begin();
+
+	cmd.beginRenderPass(*m_renderPass, m_framebuffers[imageIndex], m_swapchain->getExtent());
+	cmd.bindPipeline(*m_pipeline);
+	cmd.setViewport(m_swapchain->getExtent());
+	cmd.setScissor(m_swapchain->getExtent());
+
+	for (const auto& [handle, entry] : m_renderScene->models()) {
+		core::ModelUBO modelUbo;
+		modelUbo.model = entry.transform.matrix();
+		m_modelUBO->upload(&modelUbo, sizeof(modelUbo));
+
+		Material* material = (entry.materialId != InvalidMaterialId)
+			? m_assetManager->getMaterial(entry.materialId) : nullptr;
+		if (material && material->descriptorSet()) {
+			std::vector<VulkanDescriptorSet*> descriptorSetsToBind = {
+				&m_descriptorSets[imageIndex],
+				material->descriptorSet(),
+				&m_modelDescriptorSets[imageIndex]
+			};
+			cmd.bindDescriptorSets(*m_pipelineLayout, descriptorSetsToBind);
+		}
+
+		for (MeshId meshId : entry.meshIds) {
+			const Mesh* mesh = m_assetManager->getMesh(meshId);
+			if (mesh) {
+				mesh->bindVertexBuffer(cmd.getHandle());
+				if (mesh->hasIndices()) {
+					mesh->bindIndexBuffer(cmd.getHandle());
+					mesh->draw(cmd.getHandle());
+				} else {
+					mesh->draw(cmd.getHandle());
+				}
+			}
+		}
+	}
+
+	cmd.endRenderPass();
+	m_frames->endFrame(cmd.getHandle(), imageIndex);
 }
 
 } // namespace core

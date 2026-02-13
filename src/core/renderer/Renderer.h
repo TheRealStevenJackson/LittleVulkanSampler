@@ -37,8 +37,8 @@ public:
 	Renderer(const Renderer&) = delete;
 	Renderer& operator=(const Renderer&) = delete;
 
-	/** Parameters for engine::Engine::renderFrame(). */
-	engine::Engine::RenderFrameParams getRenderFrameParams();
+	/** Performs one frame of rendering. */
+	void renderFrame();
 
 	/** Material descriptor layout; used to update material descriptor sets after loading entities. */
 	VulkanDescriptorSetLayout* getMaterialDescriptorLayout() { return m_materialDescriptorLayout.get(); }
