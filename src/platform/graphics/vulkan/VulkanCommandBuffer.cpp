@@ -81,13 +81,19 @@ void VulkanCommandBuffer::bindDescriptorSet(VulkanPipelineLayout& pipelineLayout
 
 void VulkanCommandBuffer::bindDescriptorSets(VulkanPipelineLayout& pipelineLayout, const std::vector<VulkanDescriptorSet*>& descriptorSets)
 {
+	bindDescriptorSets(pipelineLayout, descriptorSets, {});
+}
+
+void VulkanCommandBuffer::bindDescriptorSets(VulkanPipelineLayout& pipelineLayout, const std::vector<VulkanDescriptorSet*>& descriptorSets, const std::vector<uint32_t>& dynamicOffsets)
+{
 	std::vector<VkDescriptorSet> sets;
 	sets.reserve(descriptorSets.size());
 	for (auto* set : descriptorSets) {
 		sets.push_back(set->descriptorSet());
 	}
 	vkCmdBindDescriptorSets(mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout.pipelineLayout(),
-		0, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
+		0, static_cast<uint32_t>(sets.size()), sets.data(),
+		static_cast<uint32_t>(dynamicOffsets.size()), dynamicOffsets.empty() ? nullptr : dynamicOffsets.data());
 }
 
 void VulkanCommandBuffer::bindVertexBuffer(VulkanBuffer& vertexBuffer)

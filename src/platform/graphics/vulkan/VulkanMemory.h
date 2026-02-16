@@ -42,9 +42,12 @@ public:
 	void destroyImage(const AllocatedImage& image);
 
 	void uploadToBuffer(AllocatedBuffer& buffer, const void* data, VkDeviceSize size);
+	/** Upload data at a specific offset (for dynamic UBO slots). */
+	void uploadToBuffer(AllocatedBuffer& buffer, VkDeviceSize offset, const void* data, VkDeviceSize size);
 
 private:
 	void uploadHostVisible(VmaAllocation allocation, const void* data, VkDeviceSize size);
+	void uploadHostVisibleAtOffset(VmaAllocation allocation, VkDeviceSize offset, const void* data, VkDeviceSize size);
 	void uploadDeviceLocal(AllocatedBuffer& dst, const void* data, VkDeviceSize size);
 
 	VmaAllocator mAllocator = VK_NULL_HANDLE;

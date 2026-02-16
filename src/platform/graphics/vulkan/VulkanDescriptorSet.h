@@ -22,6 +22,8 @@ public:
 
 	void writeUniformBuffer(VulkanBuffer&, VkDeviceSize);
 	void writeUniformBuffer(VulkanBuffer&, VkDeviceSize, uint32_t binding);
+	/** For dynamic UBO: range is per-slot size, type typically VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC. */
+	void writeUniformBuffer(VulkanBuffer&, VkDeviceSize range, uint32_t binding, VkDescriptorType descriptorType);
 	void writeCombinedImageSampler(VulkanImage&, VkSampler, uint32_t binding);
 
 private:

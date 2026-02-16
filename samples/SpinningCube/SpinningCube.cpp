@@ -16,7 +16,29 @@ int main() {
         "../../../resources/meshes/nes-controller/controller_wireless_1024.obj"
     };
 
-    if (!engine.loadEntityTemporary(pathsToTry)) {
+    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-0.2f, -0.2f, -0.2f));
+
+    if (!engine.loadEntityTemporary(pathsToTry, modelMatrix)) {
+        std::cerr << "Failed to load mesh. Tried paths:" << std::endl;
+        for (const auto& path : pathsToTry) {
+            std::cerr << "  - " << path << std::endl;
+        }
+        return -1;
+    }
+
+    glm::mat4 modelMatrix2 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.1f, -0.15f, -0.1f));
+
+    if (!engine.loadEntityTemporary(pathsToTry, modelMatrix2)) {
+        std::cerr << "Failed to load mesh. Tried paths:" << std::endl;
+        for (const auto& path : pathsToTry) {
+            std::cerr << "  - " << path << std::endl;
+        }
+        return -1;
+    }
+
+    glm::mat4 modelMatrix3 = glm::translate(glm::mat4(1.0f), glm::vec3(-0.15f, -0.1f, -0.15f));
+
+    if (!engine.loadEntityTemporary(pathsToTry, modelMatrix3)) {
         std::cerr << "Failed to load mesh. Tried paths:" << std::endl;
         for (const auto& path : pathsToTry) {
             std::cerr << "  - " << path << std::endl;

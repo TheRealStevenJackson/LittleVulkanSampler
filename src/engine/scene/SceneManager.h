@@ -62,11 +62,13 @@ public:
 	 * Temporary: load a single entity from OBJ paths (tries paths, loads mesh + materials, creates Entity with controller).
 	 * Stores the entity in the manager; use loadedEntity() to access it.
 	 * If materialDescriptorLayout is non-null, updates material descriptor sets after loading (for rendering).
+	 * \param initialTransform Initial model matrix for the entity (default: identity at origin).
 	 * \return true if loading succeeded, false if all paths failed.
 	 */
 	bool loadEntityTemporary(const std::vector<std::string>& pathsToTry,
 		engine::Controller* controller,
-		VulkanDescriptorSetLayout* materialDescriptorLayout = nullptr);
+		VulkanDescriptorSetLayout* materialDescriptorLayout = nullptr,
+		const glm::mat4& initialTransform = glm::mat4(1.0f));
 
 	/** Temporary: get the first entity loaded by loadEntityTemporary. Returns nullptr if none loaded. */
 	Entity* loadedEntity() { return m_loadedEntities.empty() ? nullptr : &m_loadedEntities.front(); }

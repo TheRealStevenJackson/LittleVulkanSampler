@@ -109,6 +109,23 @@ void VulkanMemory::uploadHostVisible(VmaAllocation allocation, const void* data,
 	vmaUnmapMemory(mAllocator, allocation);
 }
 
+void VulkanMemory::uploadHostVisibleAtOffset(VmaAllocation allocation, VkDeviceSize offset, const void* data, VkDeviceSize size)
+{
+	void* mapped = nullptr;
+	vmaMapMemory(mAllocator, allocation, &mapped);
+	std::memcpy(static_cast<char*>(mapped) + offset, data, static_cast<size_t>(size));
+	vmaUnmapMemory(mAllocator, allocation);
+}
+
+void VulkanMemory::uploadToBuffer(AllocatedBuffer& buffer, VkDeviceSize offset, const void* data, VkDeviceSize size)
+{
+	VkMemoryPropertyFlags memFlags = 0;
+	vmaGetAllocationMemoryProperties(mAllocator, buffer.allocation, &memFlags);
+	if ((memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0)
+		throw std::runtime_error("uploadToBuffer(offset): only host-visible buffers supported");
+	uploadHostVisibleAtOffset(buffer.allocation, offset, data, size);
+}
+
 void VulkanMemory::uploadDeviceLocal(AllocatedBuffer& dst, const void* data, VkDeviceSize size)
 {
 	// Create staging buffer

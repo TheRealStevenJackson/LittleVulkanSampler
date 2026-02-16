@@ -62,9 +62,9 @@ void Engine::run() {
 	vkDeviceWaitIdle(context().device());
 }
 
-bool Engine::loadEntityTemporary(const std::vector<std::string>& pathsToTry) {
+bool Engine::loadEntityTemporary(const std::vector<std::string>& pathsToTry, const glm::mat4& initialTransform) {
 	return m_sceneManager.loadEntityTemporary(pathsToTry, &m_controller,
-		m_renderer ? m_renderer->getMaterialDescriptorLayout() : nullptr);
+		m_renderer ? m_renderer->getMaterialDescriptorLayout() : nullptr, initialTransform);
 }
 
 } // namespace engine

@@ -88,10 +88,10 @@ void Renderer::createGlobalDescriptorLayout() {
 }
 
 void Renderer::createModelDescriptorLayout() {
-    // Set 2: binding 0 = model matrix
+    // Set 2: binding 0 = model matrix (dynamic: one slot per draw)
     std::vector<VkDescriptorSetLayoutBinding> layoutBindings(1);
     layoutBindings[0].binding = 0;
-    layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
     layoutBindings[0].descriptorCount = 1;
     layoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     layoutBindings[0].pImmutableSamplers = nullptr;
@@ -169,6 +169,10 @@ void Renderer::createPipeline() {
     );
 }
 
+namespace {
+    constexpr uint32_t kMaxModelProxies = 128u;
+}
+
 void Renderer::createUniformBuffers() {
     ViewProjUBO initViewProj{};
     for (int i = 0; i < 16; i++) {
@@ -185,16 +189,19 @@ void Renderer::createUniformBuffers() {
         VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
     );
 
-    core::ModelUBO initModel{};
-    initModel.model = glm::mat4(1.0f);
+    VkPhysicalDeviceProperties props{};
+    vkGetPhysicalDeviceProperties(m_ctx.physicalDevice(), &props);
+    const VkDeviceSize alignment = props.limits.minUniformBufferOffsetAlignment;
+    m_modelDynamicAlignment = static_cast<uint32_t>((sizeof(core::ModelUBO) + alignment - 1) & ~(alignment - 1));
+    const VkDeviceSize modelUBOSize = kMaxModelProxies * m_modelDynamicAlignment;
+
     m_modelUBO = std::make_unique<VulkanBuffer>(
         m_ctx,
-        &initModel,
-        sizeof(core::ModelUBO),
+        modelUBOSize,
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
     );
 
     DirectionalLightUBO initLight{};
@@ -218,9 +225,10 @@ void Renderer::createUniformBuffers() {
 }
 
 void Renderer::createGlobalDescriptorPoolAndSets() {
-    // Set 0: 2 UBOs per image; set 2: 1 UBO per image
+    // Set 0: 2 UBOs per image; set 2: 1 dynamic UBO per image
     std::vector<VkDescriptorPoolSize> poolSizes = {
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3u * m_swapchain->imageCount() }
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2u * m_swapchain->imageCount() },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, m_swapchain->imageCount() }
     };
     uint32_t maxSets = 2u * m_swapchain->imageCount();
     m_descriptorPool = std::make_unique<VulkanDescriptorPool>(m_ctx, poolSizes, maxSets);
@@ -237,7 +245,7 @@ void Renderer::createGlobalDescriptorPoolAndSets() {
     m_modelDescriptorSets.reserve(m_swapchain->imageCount());
     for (uint32_t i = 0; i < m_swapchain->imageCount(); i++) {
         m_modelDescriptorSets.emplace_back(m_ctx, *m_descriptorPool, *m_modelDescriptorLayout);
-        m_modelDescriptorSets.back().writeUniformBuffer(*m_modelUBO, sizeof(core::ModelUBO), 0);
+        m_modelDescriptorSets.back().writeUniformBuffer(*m_modelUBO, static_cast<VkDeviceSize>(m_modelDynamicAlignment), 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
     }
 }
 
@@ -270,11 +278,17 @@ void Renderer::renderFrame() {
 	cmd.setViewport(m_swapchain->getExtent());
 	cmd.setScissor(m_swapchain->getExtent());
 
+	// Upload all model matrices into the dynamic UBO at aligned offsets
+	uint32_t modelIndex = 0;
 	for (const auto& [handle, entry] : m_renderScene->models()) {
 		core::ModelUBO modelUbo;
 		modelUbo.model = entry.transform.matrix();
-		m_modelUBO->upload(&modelUbo, sizeof(modelUbo));
+		m_modelUBO->upload(modelIndex * static_cast<VkDeviceSize>(m_modelDynamicAlignment), &modelUbo, sizeof(modelUbo));
+		++modelIndex;
+	}
 
+	modelIndex = 0;
+	for (const auto& [handle, entry] : m_renderScene->models()) {
 		Material* material = (entry.materialId != InvalidMaterialId)
 			? m_assetManager->getMaterial(entry.materialId) : nullptr;
 		if (material && material->descriptorSet()) {
@@ -283,7 +297,8 @@ void Renderer::renderFrame() {
 				material->descriptorSet(),
 				&m_modelDescriptorSets[imageIndex]
 			};
-			cmd.bindDescriptorSets(*m_pipelineLayout, descriptorSetsToBind);
+			const uint32_t dynamicOffset = modelIndex * m_modelDynamicAlignment;
+			cmd.bindDescriptorSets(*m_pipelineLayout, descriptorSetsToBind, { dynamicOffset });
 		}
 
 		for (MeshId meshId : entry.meshIds) {
@@ -298,6 +313,7 @@ void Renderer::renderFrame() {
 				}
 			}
 		}
+		++modelIndex;
 	}
 
 	cmd.endRenderPass();

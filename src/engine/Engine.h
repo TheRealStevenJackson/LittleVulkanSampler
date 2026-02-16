@@ -7,6 +7,8 @@
 #include <platform/GamepadReader.h>
 #include <platform/Clock.h>
 
+#include <glm/glm.hpp>
+
 #include <memory>
 #include <vector>
 
@@ -55,9 +57,11 @@ public:
 
 	/**
 	 * Load a single entity from OBJ paths (tries paths in order) and update material descriptor sets for the engine's renderer.
+	 * \param pathsToTry Paths to try for loading the entity mesh.
+	 * \param initialTransform Initial model matrix for the entity (default: identity at origin).
 	 * \return true if loading succeeded, false if all paths failed.
 	 */
-	bool loadEntityTemporary(const std::vector<std::string>& pathsToTry);
+	bool loadEntityTemporary(const std::vector<std::string>& pathsToTry, const glm::mat4& initialTransform = glm::mat4(1.0f));
 
 	/** Call each frame to pump gamepad state into the input manager. */
 	void pollGamepads() { m_gamepadReader.poll(); }

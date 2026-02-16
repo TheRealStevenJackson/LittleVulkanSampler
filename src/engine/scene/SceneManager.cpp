@@ -2,6 +2,10 @@
 #include "core/common/RenderDataTypes.h"
 #include "core/math/Transform.h"
 
+#include <glm/gtc/quaternion.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
+
 #include <algorithm>
 #include <cctype>
 
@@ -91,7 +95,8 @@ void SceneManager::unloadScene(const std::string& sceneName) {
 
 bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTry,
 	engine::Controller* controller,
-	VulkanDescriptorSetLayout* materialDescriptorLayout)
+	VulkanDescriptorSetLayout* materialDescriptorLayout,
+	const glm::mat4& initialTransform)
 {
 	std::vector<MeshId> meshIds;
 	std::string loadedPath;
@@ -104,6 +109,18 @@ bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTr
 	entity.renderComponent().meshIds = std::move(meshIds);
 	entity.renderComponent().materialIds = std::move(materialIds);
 	entity.setController(controller);
+
+	// Apply initial transform by decomposing into position, rotation, scale
+	glm::vec3 scale;
+	glm::quat orientation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	if (glm::decompose(initialTransform, scale, orientation, translation, skew, perspective)) {
+		entity.transformComponent().position = translation;
+		entity.transformComponent().rotation = glm::eulerAngles(orientation);
+		entity.transformComponent().scale = scale;
+	}
 
 	if (m_renderScene) {
 		const glm::mat4 transform = entity.model();
@@ -123,7 +140,7 @@ bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTr
 		}
 	}
 
-	m_loadedEntities.clear();
+	//m_loadedEntities.clear();
 	m_loadedEntities.push_back(std::move(entity));
 
 	if (materialDescriptorLayout)

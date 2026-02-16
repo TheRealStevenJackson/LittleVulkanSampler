@@ -62,17 +62,22 @@ void VulkanDescriptorSet::writeUniformBuffer(VulkanBuffer& uniformBuffer, VkDevi
 
 void VulkanDescriptorSet::writeUniformBuffer(VulkanBuffer& uniformBuffer, VkDeviceSize size, uint32_t binding)
 {
+	writeUniformBuffer(uniformBuffer, size, binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+}
+
+void VulkanDescriptorSet::writeUniformBuffer(VulkanBuffer& uniformBuffer, VkDeviceSize range, uint32_t binding, VkDescriptorType descriptorType)
+{
 	VkDescriptorBufferInfo bufferInfo{};
 	bufferInfo.buffer = uniformBuffer.buffer();
 	bufferInfo.offset = 0;
-	bufferInfo.range = size;
+	bufferInfo.range = range;
 	
 	VkWriteDescriptorSet write{};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	write.dstSet = mDescriptorSet;
 	write.dstBinding = binding;
 	write.dstArrayElement = 0;
-	write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	write.descriptorType = descriptorType;
 	write.descriptorCount = 1;
 	write.pBufferInfo = &bufferInfo;
 

@@ -8,13 +8,15 @@ VulkanBuffer::VulkanBuffer(VulkanContext& context, VkDeviceSize size, VkBufferUs
 	: mContext(context),
 	mSize(size) 
 {
-	VkBufferCreateInfo info{};
-	info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	info.size = size;
-	info.usage = bufferUsage;
-	info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
 	mAllocatedBuffer = mContext.vma().createBuffer(size, bufferUsage, memoryUsage, requiredFlags);
+}
+
+VulkanBuffer::VulkanBuffer(VulkanContext& context, VkDeviceSize size, VkBufferUsageFlags bufferUsage,
+	VmaMemoryUsage memoryUsage, VkMemoryPropertyFlags requiredFlags, VmaAllocationCreateFlags allocFlags)
+	: mContext(context),
+	mSize(size)
+{
+	mAllocatedBuffer = mContext.vma().createBuffer(size, bufferUsage, memoryUsage, requiredFlags, allocFlags);
 }
 
 VulkanBuffer::VulkanBuffer(VulkanContext& context, const void* data, VkDeviceSize size,
@@ -34,4 +36,8 @@ VulkanBuffer::~VulkanBuffer() {
 
 void VulkanBuffer::upload(const void* data, VkDeviceSize size) {
 	mContext.vma().uploadToBuffer(mAllocatedBuffer, data, size);
+}
+
+void VulkanBuffer::upload(VkDeviceSize offset, const void* data, VkDeviceSize size) {
+	mContext.vma().uploadToBuffer(mAllocatedBuffer, offset, data, size);
 }

@@ -80,6 +80,8 @@ private:
 	std::unique_ptr<VulkanBuffer> m_cameraUBO;
 	std::unique_ptr<VulkanBuffer> m_directionalLightUBO;
 	std::unique_ptr<VulkanBuffer> m_modelUBO;
+	/** Per-slot size for model UBO (aligned to minUniformBufferOffsetAlignment). Used for dynamic offset. */
+	uint32_t m_modelDynamicAlignment = 0;
 
 	std::unique_ptr<VulkanDescriptorPool> m_descriptorPool;
 	std::vector<VulkanDescriptorSet> m_descriptorSets;
