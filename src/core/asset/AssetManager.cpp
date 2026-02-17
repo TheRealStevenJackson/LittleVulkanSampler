@@ -8,6 +8,7 @@
 
 AssetManager::AssetManager(VulkanContext& context)
 	: mContext(context)
+	, m_imageLoader(context)
 	, mMeshLoader(context)
 	, mMaterialLoader(context)
 	, mShaderLoader(context)
@@ -23,6 +24,7 @@ AssetManager::~AssetManager()
 		vkDestroySampler(mContext.device(), m_defaultSampler, nullptr);
 		m_defaultSampler = VK_NULL_HANDLE;
 	}
+	m_defaultTexture.reset();
 }
 
 MeshId AssetManager::nextMeshId() {
@@ -193,6 +195,11 @@ void AssetManager::updateMaterialDescriptorSets(VulkanDescriptorSetLayout& mater
 		throw std::runtime_error("Failed to create default sampler.");
 	}
 
+	// Clear all materials' descriptor sets so they are freed while the current pool is still valid.
+	// Otherwise replacing m_materialDescriptorPool would destroy the pool before materials release their sets.
+	for (auto& [id, materialPtr] : m_materialMap)
+		materialPtr->setDescriptorSet(std::unique_ptr<VulkanDescriptorSet>());
+
 	const uint32_t size = static_cast<uint32_t>(m_materialMap.size());
 	std::vector<VkDescriptorPoolSize> poolSizes(2);
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -201,29 +208,28 @@ void AssetManager::updateMaterialDescriptorSets(VulkanDescriptorSetLayout& mater
 	poolSizes[1].descriptorCount = size;
 	m_materialDescriptorPool = std::make_unique<VulkanDescriptorPool>(mContext, poolSizes, size);
 
+	if (!m_defaultTexture)
+		m_defaultTexture = m_imageLoader.createWhiteTexture();
+	VulkanImage* placeholder = m_defaultTexture.get();
+	if (!placeholder)
+		throw std::runtime_error("Failed to create default placeholder texture for material descriptor sets.");
+
 	for (auto& [id, materialPtr] : m_materialMap) {
 		Material* material = materialPtr.get();
 		VulkanDescriptorSet set(mContext, *m_materialDescriptorPool, materialDescriptorLayout);
 
-		if (material->hasAlbedoMap() && material->albedoMap()) {
-			set.writeCombinedImageSampler(*material->albedoMap()->image(), m_defaultSampler, 0);
-		}
-		if (material->hasNormalMap() && material->normalMap()) {
-			set.writeCombinedImageSampler(*material->normalMap()->image(), m_defaultSampler, 1);
-		}
-		if (material->hasMetallicMap() && material->metallicMap()) {
-			set.writeCombinedImageSampler(*material->metallicMap()->image(), m_defaultSampler, 2);
-		}
-		if (material->hasRoughnessMap() && material->roughnessMap()) {
-			set.writeCombinedImageSampler(*material->roughnessMap()->image(), m_defaultSampler, 3);
-		}
-		if (material->hasAoMap() && material->aoMap()) {
-			set.writeCombinedImageSampler(*material->aoMap()->image(), m_defaultSampler, 4);
-		}
+		VulkanImage* albedo = (material->hasAlbedoMap() && material->albedoMap()) ? material->albedoMap()->image() : placeholder;
+		set.writeCombinedImageSampler(*albedo, m_defaultSampler, 0);
+		VulkanImage* normal = (material->hasNormalMap() && material->normalMap()) ? material->normalMap()->image() : placeholder;
+		set.writeCombinedImageSampler(*normal, m_defaultSampler, 1);
+		VulkanImage* metallic = (material->hasMetallicMap() && material->metallicMap()) ? material->metallicMap()->image() : placeholder;
+		set.writeCombinedImageSampler(*metallic, m_defaultSampler, 2);
+		VulkanImage* roughness = (material->hasRoughnessMap() && material->roughnessMap()) ? material->roughnessMap()->image() : placeholder;
+		set.writeCombinedImageSampler(*roughness, m_defaultSampler, 3);
+		VulkanImage* ao = (material->hasAoMap() && material->aoMap()) ? material->aoMap()->image() : placeholder;
+		set.writeCombinedImageSampler(*ao, m_defaultSampler, 4);
 		set.writeUniformBuffer(material->materialUBO(), sizeof(MaterialUBO), 5);
 
 		material->setDescriptorSet(std::make_unique<VulkanDescriptorSet>(std::move(set)));
-
-		std::cout << "setPtr: " << material->descriptorSet() << std::endl;
 	}
 }

@@ -170,7 +170,7 @@ void Renderer::createPipeline() {
 }
 
 namespace {
-    constexpr uint32_t kMaxModelProxies = 128u;
+    constexpr uint32_t kMaxModelProxies = 4096u;
 }
 
 void Renderer::createUniformBuffers() {
@@ -179,15 +179,19 @@ void Renderer::createUniformBuffers() {
         initViewProj.view[i] = (i % 5 == 0) ? 1.0f : 0.0f;
         initViewProj.proj[i] = (i % 5 == 0) ? 1.0f : 0.0f;
     }
-    m_cameraUBO = std::make_unique<VulkanBuffer>(
-        m_ctx,
-        &initViewProj,
-        sizeof(ViewProjUBO),
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
-    );
+    m_cameraUBOs.clear();
+    m_cameraUBOs.reserve(m_swapchain->imageCount());
+    for (uint32_t i = 0; i < m_swapchain->imageCount(); i++) {
+        m_cameraUBOs.push_back(std::make_unique<VulkanBuffer>(
+            m_ctx,
+            &initViewProj,
+            sizeof(ViewProjUBO),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+        ));
+    }
 
     VkPhysicalDeviceProperties props{};
     vkGetPhysicalDeviceProperties(m_ctx.physicalDevice(), &props);
@@ -237,7 +241,7 @@ void Renderer::createGlobalDescriptorPoolAndSets() {
     m_descriptorSets.reserve(m_swapchain->imageCount());
     for (uint32_t i = 0; i < m_swapchain->imageCount(); i++) {
         m_descriptorSets.emplace_back(m_ctx, *m_descriptorPool, *m_descriptorLayout);
-        m_descriptorSets.back().writeUniformBuffer(*m_cameraUBO, sizeof(ViewProjUBO), 0);
+        m_descriptorSets.back().writeUniformBuffer(*m_cameraUBOs[i], sizeof(ViewProjUBO), 0);
         m_descriptorSets.back().writeUniformBuffer(*m_directionalLightUBO, sizeof(DirectionalLightUBO), 1);
     }
 
@@ -251,14 +255,6 @@ void Renderer::createGlobalDescriptorPoolAndSets() {
 
 void Renderer::renderFrame() {
 	const auto& cameras = m_renderScene->cameras();
-	if (!cameras.empty()) {
-		const RenderProxy& cameraProxy = cameras.begin()->second;
-		const CameraData& cam = cameraProxy.cameraData();
-		ViewProjUBO viewProj;
-		std::memcpy(viewProj.view, &cam.view, sizeof(viewProj.view));
-		std::memcpy(viewProj.proj, &cam.projection, sizeof(viewProj.proj));
-		m_cameraUBO->upload(&viewProj, sizeof(viewProj));
-	}
 	const auto& lights = m_renderScene->lights();
 	if (!lights.empty()) {
 		const RenderProxy& lightProxy = lights.begin()->second;
@@ -270,6 +266,15 @@ void Renderer::renderFrame() {
 	}
 
 	uint32_t imageIndex = m_frames->beginFrame();
+	// Upload view/proj to this frame's UBO so the GPU reads the data we just set (avoids overwriting before GPU reads)
+	if (!cameras.empty() && imageIndex < m_cameraUBOs.size()) {
+		const RenderProxy& cameraProxy = cameras.begin()->second;
+		const CameraData& cam = cameraProxy.cameraData();
+		ViewProjUBO viewProj;
+		std::memcpy(viewProj.view, &cam.view, sizeof(viewProj.view));
+		std::memcpy(viewProj.proj, &cam.projection, sizeof(viewProj.proj));
+		m_cameraUBOs[imageIndex]->upload(&viewProj, sizeof(viewProj));
+	}
 	VulkanCommandBuffer cmd(m_frames->getCommandBuffer());
 	cmd.begin();
 
@@ -278,29 +283,32 @@ void Renderer::renderFrame() {
 	cmd.setViewport(m_swapchain->getExtent());
 	cmd.setScissor(m_swapchain->getExtent());
 
-	// Upload all model matrices into the dynamic UBO at aligned offsets
+	// Upload all model matrices into the dynamic UBO at aligned offsets (clamp to buffer capacity)
 	uint32_t modelIndex = 0;
 	for (const auto& [handle, entry] : m_renderScene->models()) {
+		if (modelIndex >= kMaxModelProxies)
+			break;
 		core::ModelUBO modelUbo;
 		modelUbo.model = entry.transform.matrix();
 		m_modelUBO->upload(modelIndex * static_cast<VkDeviceSize>(m_modelDynamicAlignment), &modelUbo, sizeof(modelUbo));
 		++modelIndex;
 	}
+	const uint32_t modelCount = modelIndex;
 
 	modelIndex = 0;
 	for (const auto& [handle, entry] : m_renderScene->models()) {
+		if (modelIndex >= modelCount)
+			break;
 		Material* material = (entry.materialId != InvalidMaterialId)
 			? m_assetManager->getMaterial(entry.materialId) : nullptr;
-		if (material && material->descriptorSet()) {
-			std::vector<VulkanDescriptorSet*> descriptorSetsToBind = {
-				&m_descriptorSets[imageIndex],
-				material->descriptorSet(),
-				&m_modelDescriptorSets[imageIndex]
-			};
-			const uint32_t dynamicOffset = modelIndex * m_modelDynamicAlignment;
-			cmd.bindDescriptorSets(*m_pipelineLayout, descriptorSetsToBind, { dynamicOffset });
-		}
 
+		std::vector<VulkanDescriptorSet*> descriptorSetsToBind = {
+			&m_descriptorSets[imageIndex],
+			material->descriptorSet(),
+			&m_modelDescriptorSets[imageIndex]
+		};
+		const uint32_t dynamicOffset = modelIndex * m_modelDynamicAlignment;
+		cmd.bindDescriptorSets(*m_pipelineLayout, descriptorSetsToBind, { dynamicOffset });
 		for (MeshId meshId : entry.meshIds) {
 			const Mesh* mesh = m_assetManager->getMesh(meshId);
 			if (mesh) {

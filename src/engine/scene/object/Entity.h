@@ -29,14 +29,14 @@ public:
 	TransformComponent& transformComponent() { return m_transform; }
 	const TransformComponent& transformComponent() const { return m_transform; }
 
-	void setController(engine::Controller* controller) { m_controller = controller; }
+	virtual void setController(engine::Controller* controller) { m_controller = controller; }
 	engine::Controller* controller() { return m_controller; }
 	const engine::Controller* controller() const { return m_controller; }
 
 	/** Model matrix from transform component (position, rotation, scale). */
 	glm::mat4 model() const { return m_transform.modelMatrix(); }
 
-	void update(float dt) {
+	virtual void update(float dt) {
 		const float rotationSpeedScale = 1.0f;
 		if (m_controller) {
 			// LeftStickX -> rotation around Y axis (yaw)

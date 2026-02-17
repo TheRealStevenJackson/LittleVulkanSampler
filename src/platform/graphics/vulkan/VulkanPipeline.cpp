@@ -106,7 +106,7 @@ void VulkanPipeline::createPipeline()
 	rasterState.depthClampEnable = VK_FALSE;
 	rasterState.rasterizerDiscardEnable = VK_FALSE;
 	rasterState.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterState.cullMode = VK_CULL_MODE_NONE;
+	rasterState.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterState.depthBiasEnable = VK_FALSE;
 	rasterState.lineWidth = 1.0;

@@ -62,6 +62,10 @@ void Engine::run() {
 	vkDeviceWaitIdle(context().device());
 }
 
+void Engine::loadScene(const std::string& filepath) {
+	return m_sceneManager.loadScene(filepath, m_renderer->getMaterialDescriptorLayout());
+}
+
 bool Engine::loadEntityTemporary(const std::vector<std::string>& pathsToTry, const glm::mat4& initialTransform) {
 	return m_sceneManager.loadEntityTemporary(pathsToTry, &m_controller,
 		m_renderer ? m_renderer->getMaterialDescriptorLayout() : nullptr, initialTransform);

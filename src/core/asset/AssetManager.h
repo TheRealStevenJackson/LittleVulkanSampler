@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/asset/loader/ImageLoader.h"
 #include "core/asset/loader/MeshLoader.h"
 #include "core/asset/loader/MaterialLoader.h"
 #include "core/asset/loader/SceneLoader.h"
@@ -11,6 +12,7 @@
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanDescriptorPool.h"
 #include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
+#include "platform/graphics/vulkan/VulkanImage.h"
 
 #include <cstdint>
 #include <memory>
@@ -139,9 +141,11 @@ private:
 	ShaderId nextShaderId();
 
 	VulkanContext& mContext;
+	ImageLoader m_imageLoader;
 	MeshLoader mMeshLoader;
 	MaterialLoader mMaterialLoader;
 	ShaderLoader mShaderLoader;
+	std::unique_ptr<VulkanImage> m_defaultTexture;
 	std::unordered_map<MeshId, std::unique_ptr<Mesh>> m_meshMap;
 	std::unordered_map<MaterialId, std::unique_ptr<Material>> m_materialMap;
 	std::unordered_map<ShaderId, std::unique_ptr<Shader>> m_shaderMap;

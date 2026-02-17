@@ -3,6 +3,7 @@
 #include "core/common/IRenderScene.h"
 #include "core/renderer/RenderProxy.h"
 
+#include <glm/glm.hpp>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -23,6 +24,7 @@ class RenderScene : public IRenderScene {
 public:
 	uint32_t registerProxy(const RenderProxyUpdate& update) override;
 	void updateProxy(uint32_t handle, const std::vector<MeshId>& meshIds, MaterialId materialId, const Transform& transform) override;
+	void updateCameraProxy(uint32_t handle, const glm::mat4& view, const glm::mat4& projection, const glm::vec3& worldPos) override;
 
 	/** Log the current number of render proxies to stdout. */
 	void logProxyData() const;

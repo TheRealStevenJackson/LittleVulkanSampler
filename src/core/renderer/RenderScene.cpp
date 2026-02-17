@@ -40,6 +40,16 @@ void RenderScene::updateProxy(uint32_t handle, const std::vector<MeshId>& meshId
 	}
 }
 
+void RenderScene::updateCameraProxy(uint32_t handle, const glm::mat4& view, const glm::mat4& projection, const glm::vec3& worldPos) {
+	auto it = m_cameras.find(handle);
+	if (it != m_cameras.end()) {
+		CameraData& cam = it->second.cameraData();
+		cam.view = view;
+		cam.projection = projection;
+		cam.worldPos = worldPos;
+	}
+}
+
 void RenderScene::logProxyData() const {
 	std::cout << "RenderScene: " << m_cameras.size() << " camera(s), " << m_lights.size() << " light(s), " << m_models.size() << " model(s)" << std::endl;
 	for (const auto& [id, proxy] : m_cameras) {

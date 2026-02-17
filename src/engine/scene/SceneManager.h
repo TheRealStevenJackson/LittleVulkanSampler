@@ -25,7 +25,7 @@ public:
 	 * Load a glTF 2.0 .glb scene via AssetManager::loadScene.
 	 * \param filepath Path to the .glb file.
 	 */
-	void loadScene(const std::string& filepath);
+	void loadScene(const std::string& filepath, VulkanDescriptorSetLayout* materialDescriptorLayout);
 
 	/**
 	 * Temporary: load a single entity from OBJ paths (tries paths, loads mesh + materials, creates Entity with controller).

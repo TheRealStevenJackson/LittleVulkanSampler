@@ -77,7 +77,8 @@ private:
 	std::unique_ptr<VulkanPipelineLayout> m_pipelineLayout;
 	std::unique_ptr<VulkanPipeline> m_pipeline;
 
-	std::unique_ptr<VulkanBuffer> m_cameraUBO;
+	/** One camera (view/proj) UBO per swapchain image so the GPU reads the data we uploaded for this frame. */
+	std::vector<std::unique_ptr<VulkanBuffer>> m_cameraUBOs;
 	std::unique_ptr<VulkanBuffer> m_directionalLightUBO;
 	std::unique_ptr<VulkanBuffer> m_modelUBO;
 	/** Per-slot size for model UBO (aligned to minUniformBufferOffsetAlignment). Used for dynamic offset. */

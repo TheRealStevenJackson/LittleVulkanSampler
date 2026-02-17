@@ -10,8 +10,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -267,14 +269,16 @@ std::optional<Scene> SceneLoader::loadGLB(AssetManager* assetManager, const std:
 					}
 				}
 
-				VkDeviceSize vertexSize = sizeof(Vertex);
+				VkDeviceSize vertexStride = sizeof(Vertex);
+				VkDeviceSize vertexBufferSize = vertexStride * vertexCount;
 				uint32_t vCount = static_cast<uint32_t>(vertexCount);
 				std::unique_ptr<Mesh> mesh;
 				if (indexCount > 0 && indexData != nullptr)
-					mesh = std::make_unique<Mesh>(ctx, vertices.data(), vertexSize, vCount, indexData, indexSize, indexCount, indexType);
+					mesh = std::make_unique<Mesh>(ctx, vertices.data(), vertexBufferSize, vCount, indexData, indexSize, indexCount, indexType);
 				else
-					mesh = std::make_unique<Mesh>(ctx, vertices.data(), vertexSize, vCount);
-				primIds.push_back(assetManager->addMesh(std::move(mesh)));
+					mesh = std::make_unique<Mesh>(ctx, vertices.data(), vertexBufferSize, vCount);
+				MeshId assignedId = assetManager->addMesh(std::move(mesh));
+				primIds.push_back(assignedId);
 			}
 		}
 

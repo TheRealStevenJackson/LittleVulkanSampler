@@ -10,15 +10,19 @@
 
 namespace {
 
-void logNode(const Node& node, int depth) {
-	const std::string indent(depth * 2, ' ');
-	const glm::vec3 translation(node.transform[3][0], node.transform[3][1], node.transform[3][2]);
-	std::cout << indent << "node: translation=(" << translation.x << ", " << translation.y << ", " << translation.z
-		<< "), meshes=" << node.meshIds.size()
-		<< ", materials=" << node.materialIds.size()
-		<< ", children=" << node.children.size() << std::endl;
-	for (size_t i = 0; i < node.children.size(); ++i)
-		logNode(node.children[i], depth + 1);
+void registerNodeProxies(core::IRenderScene* renderScene, const Node& node, const glm::mat4& parentWorld) {
+	const glm::mat4 world = parentWorld * node.transform;
+	for (size_t i = 0; i < node.meshIds.size(); ++i) {
+		MaterialId materialId = (i < node.materialIds.size()) ? node.materialIds[i] : InvalidMaterialId;
+		core::RenderProxyUpdate update{};
+		update.type = core::ProxyType::Model;
+		update.proxyID = 0;
+		update.transform = world;
+		update.data.model = { world, materialId, node.meshIds[i], {} };
+		renderScene->registerProxy(update);
+	}
+	for (const Node& child : node.children)
+		registerNodeProxies(renderScene, child, world);
 }
 
 } // namespace
@@ -28,16 +32,16 @@ SceneManager::SceneManager(AssetManager& assetManager)
 {
 }
 
-void SceneManager::loadScene(const std::string& filepath) {
+void SceneManager::loadScene(const std::string& filepath, VulkanDescriptorSetLayout* materialDescriptorLayout) {
 	auto scene = m_assetManager->loadScene(filepath);
-	// if (!scene)
-	// 	return;
-	// std::cout << "Scene: " << scene->rootNodes.size() << " root node(s)" << std::endl;
-	// for (size_t i = 0; i < scene->rootNodes.size(); ++i) {
-	// 	std::cout << "Root node " << i << ":" << std::endl;
-	// 	logNode(scene->rootNodes[i], 1);
-	// }
-	m_assetManager->logAssets();
+
+	if (m_renderScene) {
+		const glm::mat4 rootWorld(1.0f);
+		for (const Node& rootNode : scene->rootNodes)
+			registerNodeProxies(m_renderScene, rootNode, rootWorld);
+	}
+
+	m_assetManager->updateMaterialDescriptorSets(*materialDescriptorLayout);
 }
 
 bool SceneManager::loadEntityTemporary(const std::vector<std::string>& pathsToTry,
@@ -149,7 +153,16 @@ void SceneManager::update(float dt) {
 				m_renderScene->updateProxy(rc.renderProxyIds[i], { rc.meshIds[i] }, materialId, transform);
 		}
 	}
-	// TODO: Uncomment when Entity::update() is fixed
-	// for (Camera& camera : m_cameras)
-	// 	camera.update(dt);
+	for (Camera& camera : m_cameras) {
+		camera.update(dt);
+		if (m_renderScene) {
+			const auto& proxyIds = camera.renderComponent().renderProxyIds;
+			if (!proxyIds.empty()) {
+				const uint32_t handle = proxyIds.front();
+				const glm::vec3 worldPos = camera.transformComponent().position;
+				m_renderScene->updateCameraProxy(handle,
+					camera.viewMatrix(), camera.projectionMatrix(), worldPos);
+			}
+		}
+	}
 }

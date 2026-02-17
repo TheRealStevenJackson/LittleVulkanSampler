@@ -21,6 +21,9 @@ struct IRenderScene {
 
 	/** Update an existing proxy by the handle returned from registerProxy. */
 	virtual void updateProxy(uint32_t handle, const std::vector<MeshId>& meshIds, MaterialId materialId, const Transform& transform) = 0;
+
+	/** Update an existing camera proxy with current view, projection, and world position. */
+	virtual void updateCameraProxy(uint32_t handle, const glm::mat4& view, const glm::mat4& projection, const glm::vec3& worldPos) = 0;
 };
 
 } // namespace core

@@ -55,6 +55,8 @@ public:
 	SceneManager& sceneManager() { return m_sceneManager; }
 	const SceneManager& sceneManager() const { return m_sceneManager; }
 
+	void loadScene(const std::string& filepath);
+
 	/**
 	 * Load a single entity from OBJ paths (tries paths in order) and update material descriptor sets for the engine's renderer.
 	 * \param pathsToTry Paths to try for loading the entity mesh.
