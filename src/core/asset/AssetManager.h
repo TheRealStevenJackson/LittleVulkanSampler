@@ -9,11 +9,13 @@
 #include "core/asset/types/Material.h"
 #include "core/asset/types/Scene.h"
 #include "core/asset/types/Shader.h"
+#include "core/asset/types/Texture.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanDescriptorPool.h"
 #include "platform/graphics/vulkan/VulkanDescriptorSetLayout.h"
 #include "platform/graphics/vulkan/VulkanImage.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -118,6 +120,18 @@ public:
 	 * Returns empty vector on failure.
 	 */
 	std::vector<MaterialId> loadMaterials(const std::string& filepath);
+
+	/**
+	 * Load a texture from file. Returns nullptr on failure.
+	 * Used by SceneLoader for glTF external image URIs.
+	 */
+	std::unique_ptr<Texture> loadTextureFromFile(const std::string& filepath);
+
+	/**
+	 * Load a texture from raw image bytes (e.g. embedded GLB image).
+	 * Returns nullptr on failure.
+	 */
+	std::unique_ptr<Texture> loadTextureFromMemory(const uint8_t* data, size_t size);
 
 	/**
 	 * Create and own a default sampler, descriptor pool for material descriptor sets (5 image samplers + 1 UBO per set),

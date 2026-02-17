@@ -2,10 +2,13 @@
 #include "core/asset/AssetManager.h"
 #include "core/asset/types/Mesh.h"
 #include "core/asset/types/Material.h"
+#include "core/asset/types/Texture.h"
 
 #include <fastgltf/core.hpp>
 #include <fastgltf/types.hpp>
 #include <fastgltf/tools.hpp>
+
+#include <filesystem>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -125,6 +128,75 @@ std::optional<::Node> convertNode(
 	return out;
 }
 
+// Load a texture from a glTF image (resolve DataSource: URI -> file path, BufferView/Vector -> memory).
+std::unique_ptr<Texture> loadTextureFromGltfImage(
+	AssetManager* assetManager,
+	const fastgltf::Asset& asset,
+	size_t imageIndex,
+	const std::filesystem::path& basePath)
+{
+	if (!assetManager || imageIndex >= asset.images.size())
+		return nullptr;
+	const fastgltf::Image& img = asset.images[imageIndex];
+	std::unique_ptr<Texture> tex;
+	std::visit(
+		[&tex, assetManager, &basePath, &asset](auto&& arg) {
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, fastgltf::sources::URI>) {
+				std::string path(arg.uri.path());
+				if (path.empty())
+					return;
+				std::filesystem::path fullPath = basePath / path;
+				tex = assetManager->loadTextureFromFile(fullPath.string());
+			} else if constexpr (std::is_same_v<T, fastgltf::sources::BufferView>) {
+				if (arg.bufferViewIndex >= asset.bufferViews.size())
+					return;
+				const fastgltf::BufferView& bv = asset.bufferViews[arg.bufferViewIndex];
+				if (bv.bufferIndex >= asset.buffers.size())
+					return;
+				const fastgltf::Buffer& buf = asset.buffers[bv.bufferIndex];
+				const std::byte* bytes = nullptr;
+				size_t size = 0;
+				std::visit(
+					[&bytes, &size, &bv](auto&& b) {
+						using B = std::decay_t<decltype(b)>;
+						if constexpr (std::is_same_v<B, fastgltf::sources::Array>) {
+							bytes = b.bytes.data();
+							size = b.bytes.size();
+							if (bv.byteOffset + bv.byteLength > size)
+								size = 0;
+							else {
+								bytes += bv.byteOffset;
+								size = bv.byteLength;
+							}
+						} else if constexpr (std::is_same_v<B, fastgltf::sources::Vector>) {
+							bytes = reinterpret_cast<const std::byte*>(b.bytes.data());
+							size = b.bytes.size();
+							if (bv.byteOffset + bv.byteLength > size)
+								size = 0;
+							else {
+								bytes += bv.byteOffset;
+								size = bv.byteLength;
+							}
+						}
+					},
+					buf.data);
+				if (bytes && size > 0)
+					tex = assetManager->loadTextureFromMemory(reinterpret_cast<const uint8_t*>(bytes), size);
+			} else if constexpr (std::is_same_v<T, fastgltf::sources::Vector>) {
+				if (!arg.bytes.empty())
+					tex = assetManager->loadTextureFromMemory(
+						reinterpret_cast<const uint8_t*>(arg.bytes.data()), arg.bytes.size());
+			} else if constexpr (std::is_same_v<T, fastgltf::sources::Array>) {
+				if (!arg.bytes.empty())
+					tex = assetManager->loadTextureFromMemory(
+						reinterpret_cast<const uint8_t*>(arg.bytes.data()), arg.bytes.size());
+			}
+		},
+		img.data);
+	return tex;
+}
+
 } // namespace
 
 std::optional<Scene> SceneLoader::loadGLB(AssetManager* assetManager, const std::filesystem::path& path) {
@@ -134,7 +206,7 @@ std::optional<Scene> SceneLoader::loadGLB(AssetManager* assetManager, const std:
 
 	fastgltf::Parser parser(fastgltf::Extensions::None);
 	auto assetResult = parser.loadGltf(bufferResult.get(), path.parent_path(),
-		fastgltf::Options::None, fastgltf::Category::OnlyRenderable);
+		fastgltf::Options::LoadExternalImages, fastgltf::Category::OnlyRenderable);
 
 	if (!assetResult)
 		return std::nullopt;
@@ -165,7 +237,7 @@ std::optional<Scene> SceneLoader::loadGLB(AssetManager* assetManager, const std:
 		defaultMat->setRoughness(0.5f);
 		defaultMaterialId = assetManager->addMaterial(std::move(defaultMat));
 
-		// One Material per glTF material (PBR base color, metallic, roughness).
+		// One Material per glTF material (PBR base color, metallic, roughness, textures).
 		for (const auto& gltfMat : asset.materials) {
 			auto mat = std::make_unique<Material>(ctx);
 			const auto& pbr = gltfMat.pbrData;
@@ -174,6 +246,41 @@ std::optional<Scene> SceneLoader::loadGLB(AssetManager* assetManager, const std:
 			mat->setMetallic(static_cast<float>(pbr.metallicFactor));
 			mat->setRoughness(static_cast<float>(pbr.roughnessFactor));
 			mat->setAo(1.0f);
+
+			// Resolve texture index -> image index -> load texture.
+			auto textureToImage = [&asset](size_t textureIndex) -> std::optional<size_t> {
+				if (textureIndex >= asset.textures.size())
+					return std::nullopt;
+				return asset.textures[textureIndex].imageIndex;
+			};
+
+			if (pbr.baseColorTexture.has_value()) {
+				if (auto imgIdx = textureToImage(pbr.baseColorTexture->textureIndex))
+					if (auto tex = loadTextureFromGltfImage(assetManager, asset, *imgIdx, path.parent_path()))
+						mat->setAlbedoMap(std::move(tex));
+			}
+			if (gltfMat.normalTexture.has_value()) {
+				if (auto imgIdx = textureToImage(gltfMat.normalTexture->textureIndex))
+					if (auto tex = loadTextureFromGltfImage(assetManager, asset, *imgIdx, path.parent_path()))
+						mat->setNormalMap(std::move(tex));
+			}
+			if (pbr.metallicRoughnessTexture.has_value()) {
+				if (auto imgIdx = textureToImage(pbr.metallicRoughnessTexture->textureIndex)) {
+					if (auto tex = loadTextureFromGltfImage(assetManager, asset, *imgIdx, path.parent_path())) {
+						// glTF packs metallic (G) and roughness (B) in one texture; use for both slots.
+						mat->setMetallicMap(std::move(tex));
+						// Load same image again for roughness slot (Material has no shared-texture support).
+						if (auto tex2 = loadTextureFromGltfImage(assetManager, asset, *imgIdx, path.parent_path()))
+							mat->setRoughnessMap(std::move(tex2));
+					}
+				}
+			}
+			if (gltfMat.occlusionTexture.has_value()) {
+				if (auto imgIdx = textureToImage(gltfMat.occlusionTexture->textureIndex))
+					if (auto tex = loadTextureFromGltfImage(assetManager, asset, *imgIdx, path.parent_path()))
+						mat->setAoMap(std::move(tex));
+			}
+
 			materialIdByGltfIndex.push_back(assetManager->addMaterial(std::move(mat)));
 		}
 

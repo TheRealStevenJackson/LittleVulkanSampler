@@ -1,5 +1,6 @@
 #include "core/asset/AssetManager.h"
 #include "core/asset/types/Material.h"
+#include "core/asset/types/Texture.h"
 #include "platform/graphics/vulkan/VulkanDescriptorSet.h"
 
 #include <vulkan/vulkan.h>
@@ -165,6 +166,22 @@ std::vector<MaterialId> AssetManager::loadMaterials(const std::string& filepath)
 	}
 
 	return materialIds;
+}
+
+std::unique_ptr<Texture> AssetManager::loadTextureFromFile(const std::string& filepath)
+{
+	LoadedImage loaded = m_imageLoader.loadImage(filepath);
+	if (!loaded.image)
+		return nullptr;
+	return std::make_unique<Texture>(mContext, std::move(loaded.image));
+}
+
+std::unique_ptr<Texture> AssetManager::loadTextureFromMemory(const uint8_t* data, size_t size)
+{
+	LoadedImage loaded = m_imageLoader.loadImageFromMemory(data, size);
+	if (!loaded.image)
+		return nullptr;
+	return std::make_unique<Texture>(mContext, std::move(loaded.image));
 }
 
 void AssetManager::updateMaterialDescriptorSets(VulkanDescriptorSetLayout& materialDescriptorLayout)

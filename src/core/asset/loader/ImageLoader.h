@@ -3,6 +3,7 @@
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanImage.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -74,6 +75,12 @@ public:
 	 * Returns empty struct (with nullptr image) on failure.
 	 */
 	LoadedImage loadImage(const std::string& filepath);
+
+	/**
+	 * Load an image from memory (e.g. embedded GLB buffer) using stbi_load_from_memory.
+	 * Returns empty struct (with nullptr image) on failure.
+	 */
+	LoadedImage loadImageFromMemory(const uint8_t* data, size_t size);
 
 	/**
 	 * Create a 1x1 white texture (RGBA = 1.0, 1.0, 1.0, 1.0).
