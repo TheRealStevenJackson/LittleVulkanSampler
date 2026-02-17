@@ -56,7 +56,7 @@ void Engine::run() {
 		m_clock.tick();
 		const float dt = static_cast<float>(m_clock.deltaTime());
 		sceneManager().update(dt);
-		m_renderer->getRenderScene()->logProxyData();
+		// m_renderer->getRenderScene()->logProxyData();
 		m_renderer->renderFrame();
 	}
 	vkDeviceWaitIdle(context().device());

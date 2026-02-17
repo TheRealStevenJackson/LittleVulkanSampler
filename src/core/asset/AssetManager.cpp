@@ -74,6 +74,25 @@ bool AssetManager::loadObjFromPaths(const std::vector<std::string>& pathsToTry,
 	return false;
 }
 
+std::optional<Scene> AssetManager::loadScene(const std::string& filepath) {
+	SceneLoader loader;
+	return loader.loadGLB(this, filepath);
+}
+
+void AssetManager::logAssets() const {
+	std::cout << "--- Assets ---" << std::endl;
+	std::cout << "Meshes: " << m_meshMap.size() << std::endl;
+	for (const auto& [id, mesh] : m_meshMap)
+		std::cout << "  MeshId " << id << ": vertices=" << mesh->vertexCount() << ", indices=" << mesh->indexCount() << std::endl;
+	std::cout << "Materials: " << m_materialMap.size() << std::endl;
+	for (const auto& [id, material] : m_materialMap)
+		std::cout << "  MaterialId " << id << std::endl;
+	std::cout << "Shaders: " << m_shaderMap.size() << std::endl;
+	for (const auto& [id, shader] : m_shaderMap)
+		std::cout << "  ShaderId " << id << std::endl;
+	std::cout << "---------------" << std::endl;
+}
+
 MeshId AssetManager::addMesh(std::unique_ptr<Mesh> mesh) {
 	if (!mesh)
 		return InvalidMeshId;

@@ -1,3 +1,5 @@
+find_package(fastgltf CONFIG REQUIRED)
+
 add_library(Assets STATIC
 	types/Mesh.cpp
 	types/Material.cpp
@@ -7,6 +9,7 @@ add_library(Assets STATIC
 	loader/ImageLoader.cpp
 	loader/MaterialLoader.cpp
 	loader/ShaderLoader.cpp
+	loader/SceneLoader.cpp
 	AssetManager.cpp
 )
 
@@ -26,4 +29,6 @@ target_link_libraries(Assets
 	PUBLIC
 		VulkanBackend
 		tinyobjloader
+	PRIVATE
+		fastgltf::fastgltf
 )

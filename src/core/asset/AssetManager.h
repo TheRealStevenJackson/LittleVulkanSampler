@@ -2,9 +2,11 @@
 
 #include "core/asset/loader/MeshLoader.h"
 #include "core/asset/loader/MaterialLoader.h"
+#include "core/asset/loader/SceneLoader.h"
 #include "core/asset/loader/ShaderLoader.h"
 #include "core/asset/types/Mesh.h"
 #include "core/asset/types/Material.h"
+#include "core/asset/types/Scene.h"
 #include "core/asset/types/Shader.h"
 #include "platform/graphics/vulkan/VulkanContext.h"
 #include "platform/graphics/vulkan/VulkanDescriptorPool.h"
@@ -12,6 +14,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -62,7 +65,14 @@ public:
 		std::vector<MeshId>& outMeshIds,
 		std::string& outLoadedPath);
 
-	/** Returns the Vulkan context (e.g. for creating meshes/materials from glTF in SceneLoader). */
+	/**
+	 * Load a glTF 2.0 .glb scene via SceneLoader.
+	 * \param filepath Path to the .glb file.
+	 * \return The parsed Scene, or std::nullopt on parse error or if the file has no default scene.
+	 */
+	std::optional<Scene> loadScene(const std::string& filepath);
+
+	/** Returns the Vulkan context (e.g. for creating meshes/materials from glTF). */
 	VulkanContext& context() { return mContext; }
 	const VulkanContext& context() const { return mContext; }
 
@@ -119,6 +129,9 @@ public:
 	 */
 	VulkanDescriptorPool* materialDescriptorPool() { return m_materialDescriptorPool.get(); }
 	const VulkanDescriptorPool* materialDescriptorPool() const { return m_materialDescriptorPool.get(); }
+
+	/** Log all loaded meshes, materials, and shaders to stdout. */
+	void logAssets() const;
 
 private:
 	MeshId nextMeshId();
